@@ -8,23 +8,23 @@ let helpers = require("./helpers");
 
 const client_id: string = process.env.CLIENT_ID; // Your client id
 const client_secret: string = process.env.CLIENT_SECRET; // Your secret
-const redirect_uri: string = 'http://localhost:8888/success'; // Your redirect uri
+const redirect_uri: string = 'http://localhost:8888/callback'; // Your redirect uri
 
 let stateKey = 'spotify_auth_state';
 
-let router = express_auth.Router();
+let router_auth = express_auth.Router();
 
-router.use(express_auth.static(__dirname + '/public'))
+router_auth.use(express_auth.static(__dirname + '/public'))
    .use(cors())
    .use(cookieParser());
 
-router.get('/success', (req, res) => {
+router_auth.get('/success', (req, res) => {
   res.send({
     status: "success"
   })
 })
 
-router.get('/login', function(req, res) {
+router_auth.get('/login', function(req, res) {
 
   let state = helpers.GenerateRandomString(16);
   res.cookie(stateKey, state);
@@ -41,7 +41,7 @@ router.get('/login', function(req, res) {
     }));
 });
 
-router.get('/callback', function(req, res) {
+router_auth.get('/callback', function(req, res) {
 
   // your application requests refresh and access tokens
   // after checking the state parameter
@@ -76,6 +76,9 @@ router.get('/callback', function(req, res) {
         let access_token = body.access_token,
             refresh_token = body.refresh_token;
 
+        process.env.access_token = access_token;
+        process.env.refresh_token = refresh_token;
+
         let options = {
           url: 'https://api.spotify.com/v1/me',
           headers: { 'Authorization': 'Bearer ' + access_token },
@@ -103,7 +106,7 @@ router.get('/callback', function(req, res) {
   }
 });
 
-router.get('/refresh_token', function(req, res) {
+router_auth.get('/refresh_token', function(req, res) {
 
   // requesting access token from refresh token
   let refresh_token = req.query.refresh_token;
@@ -127,4 +130,4 @@ router.get('/refresh_token', function(req, res) {
   });
 });
 
-module.exports = router
+module.exports = router_auth
