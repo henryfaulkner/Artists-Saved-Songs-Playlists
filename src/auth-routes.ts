@@ -1,55 +1,32 @@
-/**
- * This is an example of a basic node.js script that performs
- * the Authorization Code oAuth2 flow to authenticate against
- * the Spotify Accounts.
- *
- * For more information, read
- * https://developer.spotify.com/web-api/authorization-guide/#authorization_code_flow
- */
-
-let express = require('express'); // Express web server framework
+const express_auth = require('express');
 let request = require('request'); // "Request" library
 let cors = require('cors');
 let querystring = require('querystring');
 let cookieParser = require('cookie-parser');
 require('dotenv').config();
+let helpers = require("./helpers");
 
 const client_id: string = process.env.CLIENT_ID; // Your client id
 const client_secret: string = process.env.CLIENT_SECRET; // Your secret
 const redirect_uri: string = 'http://localhost:8888/success'; // Your redirect uri
 
-/**
- * Generates a random string containing numbers and letters
- * @param  {number} length The length of the string
- * @return {string} The generated string
- */
-let generateRandomString = function(length) {
-  let text = '';
-  let possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
-  for (let i = 0; i < length; i++) {
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
-  }
-  return text;
-};
-
 let stateKey = 'spotify_auth_state';
 
-let app = express();
+let router = express_auth.Router();
 
-app.use(express.static(__dirname + '/public'))
+router.use(express_auth.static(__dirname + '/public'))
    .use(cors())
    .use(cookieParser());
 
-app.get('/success', (req, res) => {
+router.get('/success', (req, res) => {
   res.send({
     status: "success"
   })
 })
 
-app.get('/login', function(req, res) {
+router.get('/login', function(req, res) {
 
-  let state = generateRandomString(16);
+  let state = helpers.GenerateRandomString(16);
   res.cookie(stateKey, state);
 
   // your application requests authorization
@@ -64,7 +41,7 @@ app.get('/login', function(req, res) {
     }));
 });
 
-app.get('/callback', function(req, res) {
+router.get('/callback', function(req, res) {
 
   // your application requests refresh and access tokens
   // after checking the state parameter
@@ -126,7 +103,7 @@ app.get('/callback', function(req, res) {
   }
 });
 
-app.get('/refresh_token', function(req, res) {
+router.get('/refresh_token', function(req, res) {
 
   // requesting access token from refresh token
   let refresh_token = req.query.refresh_token;
@@ -150,5 +127,4 @@ app.get('/refresh_token', function(req, res) {
   });
 });
 
-console.log('Listening on 8888');
-app.listen(8888);
+module.exports = router

@@ -3,7 +3,7 @@
   "name": "artists-saved-songs-playlists",
   "description": "This is app is meant to create a playlist that imitates Spotify's deprecated \"listen to saved songs by specific artist in the Your Library\" functionality.",
   "version": "0.0.1",
-  "main": "src/authorization_code/app.ts",
+  "main": "src/server.ts",
   "dependencies": {
     "@types/express": "^4.17.13",
     "@types/node": "^17.0.31",
