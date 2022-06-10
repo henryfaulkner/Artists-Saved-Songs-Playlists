@@ -30,7 +30,7 @@ router_auth.get('/login', function(req, res) {
   res.cookie(stateKey, state);
 
   // your application requests authorization
-  let scope = 'playlist-modify-public user-library-read';
+  let scope = 'playlist-modify-private user-library-read';
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
       response_type: 'code',
