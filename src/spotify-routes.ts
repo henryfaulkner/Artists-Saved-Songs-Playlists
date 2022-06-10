@@ -1,4 +1,5 @@
 import { callbackify } from "util";
+import Track from "./models/Track";
 
 const express_spotify = require('express');
 let request_spotify = require('request'); // "Request" library
@@ -8,6 +9,7 @@ let cookieParser_spotify = require('cookie-parser');
 
 const router_spotify = express_spotify.Router();
 let stateKey_spotify = 'spotify_auth_state';
+const helpers_spotify = require("./helpers")
 
 router_spotify.use(express_spotify.static(__dirname + '/public'))
    .use(cors_spotify())
@@ -30,12 +32,13 @@ router_spotify.get("/get-liked-tracks", function(req, res) {
         // Printing status code
         console.log(response.statusCode);
           
-        // Printing body
-        console.log(body);
-        body['items'].forEach((item: { added_at: string, track: [Object] }) => {
-            console.log("item.track");
-            console.log(item.track);
-        })
+        // creating Track objects from response
+        const trackArr: Track[] = [];
+        for(let i = 0; i < body['items'].length; i++) {
+            trackArr.push(new Track(body['items'][i]['track']))
+        }
+
+        helpers_spotify.GetAggregatedTracksByArtist(trackArr)
     })
 });
 

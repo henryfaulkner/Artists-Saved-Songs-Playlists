@@ -11,6 +11,7 @@
     "cors": "^2.8.4",
     "dotenv": "^16.0.1",
     "express": "~4.16.0",
+    "lodash.isequal": "^4.5.0",
     "querystring": "~0.2.0",
     "request": "~2.83.0",
     "ts-node": "^10.7.0",
