@@ -13,4 +13,10 @@
     return text;
   };
 
+/**
+ * Takes song items' array and parses and 
+ * aggregates them by artist
+ * @param {{ added_at: string, track: [Object] }[]}
+ */
+
 module.exports = {GenerateRandomString}
