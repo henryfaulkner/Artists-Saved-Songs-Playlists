@@ -141,8 +141,7 @@ router.get("/get-liked-tracks", function(req, res) {
       json: true
     };
 
-  let saved_tracks; 
-  request(savedTracksOptions, (error, response, body)=>{
+  request(savedTracksOptions, (error, response, body) => {
    
       // Printing the error if occurred
       if(error) console.log(error)
@@ -158,6 +157,53 @@ router.get("/get-liked-tracks", function(req, res) {
 
       aggregatedTracksByArtistList = helpers.GetAggregatedTracksByArtist(trackArr)
   })
+  res.redirect('/');
+});
+
+router.get("/set-artist-image", function(req, res) {
+  let artistOptions = {
+    url: `${req["artist_href"]}`, //https://api.spotify.com/v1/artists/{id}
+    headers: { 'authorization': 'Bearer ' + process.env.access_token },
+    'Content-Type': "application/json",
+    json: true
+  };
+
+  request(artistOptions, (error, response, body) => {
+   
+    // Printing the error if occurred
+    if(error) console.log(error);
+    
+    // Printing status code
+    console.log(response.statusCode);
+      
+    res = body["images"];
+  });
+});
+
+router.get("/set-artists-image", function(req, res) {
+  for(let i = 0; i < aggregatedTracksByArtistList.length; i++){
+    let artistOptions = {
+      url: `${aggregatedTracksByArtistList[i].Artist.href}`, //https://api.spotify.com/v1/artists/{id}
+      headers: { 'authorization': 'Bearer ' + process.env.access_token },
+      'Content-Type': "application/json",
+      json: true
+    };
+
+    request(artistOptions, (error, response, body) => {
+      // Printing the error if occurred
+      if(error) console.log(error);
+      
+      // Printing status code
+      console.log(response.statusCode);
+        
+      aggregatedTracksByArtistList[i].Artist.Image = body["images"][0];
+    });
+  }
+  res.redirect('/');
+});
+
+router.get("/create-playlists", function(req, res) {
+
 });
 
 module.exports = router

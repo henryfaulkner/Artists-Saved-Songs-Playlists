@@ -41,7 +41,6 @@ const GetAggregatedTracksByArtist = (tracks: Track[]) => {
     );
   }
 
-  console.log(aggregatedTracksByArtistList)
   return aggregatedTracksByArtistList;
 };
 

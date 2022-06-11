@@ -1,3 +1,5 @@
+import Image from "./Image";
+
 class Artist {
     public external_urls: [Object];
     public href: string;
@@ -5,6 +7,7 @@ class Artist {
     public name: string;
     public type: string;
     public uri: string;
+    public Image: Image;
 
     constructor(json) {
         if (json["external_urls"]) this.external_urls = json["external_urls"];
