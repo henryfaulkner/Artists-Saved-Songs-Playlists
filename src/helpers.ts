@@ -36,11 +36,13 @@ const GetAggregatedTracksByArtist = (tracks: Track[]) => {
     aggregatedTracksByArtistList.push(
       new AggregatedTracksByArtist({
         Artist: tracks[i].Artists[0],
-        Tracks: tracks[i],
+        Track: tracks[i],
       })
     )
   }
 
+  console.log("aggregatedTracksByArtistList")
+  console.log(aggregatedTracksByArtistList)
 };
 
 /**
@@ -51,7 +53,7 @@ const GetAggregatedTracksByArtist = (tracks: Track[]) => {
  */
 const DoesArtistHaveAggregation = (aggregatedTracksByArtistList: AggregatedTracksByArtist[], artist: Artist) => {
   for(let i = 0; i < aggregatedTracksByArtistList.length; i++) {
-    if(isEqual(artist, aggregatedTracksByArtistList[i])){
+    if(isEqual(artist, aggregatedTracksByArtistList[i]["Artist"])){
       return i;
     }
   }
