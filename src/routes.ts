@@ -1,4 +1,4 @@
-const express_auth = require('express');
+const express_routes = require('express');
 let request = require('request'); // "Request" library
 let cors = require('cors');
 let querystring = require('querystring');
@@ -6,25 +6,28 @@ let cookieParser = require('cookie-parser');
 require('dotenv').config();
 let helpers = require("./helpers");
 
+import AggregatedTracksByArtist from "./models/AggregatedTracksByArtist";
+import Track from "./models/Track";
+
 const client_id: string = process.env.CLIENT_ID; // Your client id
 const client_secret: string = process.env.CLIENT_SECRET; // Your secret
 const redirect_uri: string = 'http://localhost:8888/callback'; // Your redirect uri
-
 let stateKey = 'spotify_auth_state';
+let router = express_routes.Router();
+let aggregatedTracksByArtistList: AggregatedTracksByArtist[] = [];
 
-let router_auth = express_auth.Router();
 
-router_auth.use(express_auth.static(__dirname + '/public'))
+router.use(express_routes.static(__dirname + '/public'))
    .use(cors())
    .use(cookieParser());
 
-router_auth.get('/success', (req, res) => {
+router.get('/success', (req, res) => {
   res.send({
     status: "success"
   })
 })
 
-router_auth.get('/login', function(req, res) {
+router.get('/login', function(req, res) {
 
   let state = helpers.GenerateRandomString(16);
   res.cookie(stateKey, state);
@@ -41,7 +44,7 @@ router_auth.get('/login', function(req, res) {
     }));
 });
 
-router_auth.get('/callback', function(req, res) {
+router.get('/callback', function(req, res) {
 
   // your application requests refresh and access tokens
   // after checking the state parameter
@@ -106,7 +109,7 @@ router_auth.get('/callback', function(req, res) {
   }
 });
 
-router_auth.get('/refresh_token', function(req, res) {
+router.get('/refresh_token', function(req, res) {
 
   // requesting access token from refresh token
   let refresh_token = req.query.refresh_token;
@@ -130,4 +133,31 @@ router_auth.get('/refresh_token', function(req, res) {
   });
 });
 
-module.exports = router_auth
+router.get("/get-liked-tracks", function(req, res) {
+  let savedTracksOptions = {
+      url: 'https://api.spotify.com/v1/me/tracks',
+      headers: { 'authorization': 'Bearer ' + process.env.access_token },
+      'Content-Type': "application/json",
+      json: true
+    };
+
+  let saved_tracks; 
+  request(savedTracksOptions, (error, response, body)=>{
+   
+      // Printing the error if occurred
+      if(error) console.log(error)
+      
+      // Printing status code
+      console.log(response.statusCode);
+        
+      // creating Track objects from response
+      const trackArr: Track[] = [];
+      for(let i = 0; i < body['items']?.length ?? 0; i++) {
+          trackArr.push(new Track(body['items'][i]['track']))
+      }
+
+      aggregatedTracksByArtistList = helpers.GetAggregatedTracksByArtist(trackArr)
+  })
+});
+
+module.exports = router

@@ -21,7 +21,7 @@ const GenerateRandomString = function(length) {
 /**
  * Takes song items' array and parses and aggregates them by artist
  * @param {Track[]} list of Tracks
- * @return {{}[]} list of list of tracks aggregated by Artist
+ * @return {AggregatedTracksByArtist[]} list of list of tracks aggregated by Artist
  */
 const GetAggregatedTracksByArtist = (tracks: Track[]) => {
   const aggregatedTracksByArtistList: AggregatedTracksByArtist[] = [];
@@ -38,11 +38,11 @@ const GetAggregatedTracksByArtist = (tracks: Track[]) => {
         Artist: tracks[i].Artists[0],
         Track: tracks[i],
       })
-    )
+    );
   }
 
-  console.log("aggregatedTracksByArtistList")
   console.log(aggregatedTracksByArtistList)
+  return aggregatedTracksByArtistList;
 };
 
 /**
