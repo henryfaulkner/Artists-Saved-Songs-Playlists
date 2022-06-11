@@ -1,6 +1,6 @@
 # Artists-Saved-Songs-Playlists
 
-This is app is meant to create playlists which imitate Spotify's deprecated "listen to saved songs by specific artist in the Your Library" functionality.
+This Node.js app is meant to create playlists which imitate Spotify's deprecated "listen to saved songs by specific artist in Your Library" functionality.
 
 ## Spotify Authorization Scopes used
 
