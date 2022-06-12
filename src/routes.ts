@@ -8,12 +8,14 @@ let helpers = require("./helpers");
 
 import AggregatedTracksByArtist from "./models/AggregatedTracksByArtist";
 import Track from "./models/Track";
+import User from "./models/User";
 
 const client_id: string = process.env.CLIENT_ID; // Your client id
 const client_secret: string = process.env.CLIENT_SECRET; // Your secret
 const redirect_uri: string = 'http://localhost:8888/callback'; // Your redirect uri
 let stateKey = 'spotify_auth_state';
 let router = express_routes.Router();
+let user: User;
 let aggregatedTracksByArtistList: AggregatedTracksByArtist[] = [];
 
 
@@ -90,6 +92,7 @@ router.get('/callback', function(req, res) {
 
         // use the access token to access the Spotify Web API
         request.get(options, function(error, response, body) {
+          user = body;
           console.log(body);
         });
 
@@ -202,8 +205,31 @@ router.get("/set-artists-image", function(req, res) {
   res.redirect('/');
 });
 
-router.get("/create-playlists", function(req, res) {
+//req should be an Artist object
+router.get("/create-playlist", function(req, res) {
+  const playlistOptions = {
+    url: `https://api.spotify.com/v1/users/${user.id}/playlists`,
+    body: {
+      name: 'Jungle',//req.name,
+      public: false, //private playlist
+      collaborative: false,
+      description: `Your favorite songs from Jungle`//${req.name}`
+    },
+    headers: { 'authorization': 'Bearer ' + process.env.access_token },
+    'Content-Type': "application/json",
+    json: true
+  }
 
+  request.post(playlistOptions, (error, response, body) => {
+    // Printing the error if occurred
+    if(error) console.log(error);
+    
+    // Printing status code
+    console.log(response.statusCode);
+      
+    console.log(body)
+  });
+  res.redirect('/');
 });
 
 module.exports = router
