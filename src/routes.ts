@@ -136,6 +136,10 @@ router.get('/refresh_token', function(req, res) {
   });
 });
 
+router.get("/return-home", function(req, res) {
+  res.redirect("/");
+});
+
 router.get("/get-liked-tracks", function(req, res) {
   let savedTracksOptions = {
       url: 'https://api.spotify.com/v1/me/tracks',
@@ -231,5 +235,12 @@ router.get("/create-playlist", function(req, res) {
   });
   res.redirect('/');
 });
+
+router.get("/run-process", function(req, res) {
+  request("http://localhost:8888/get-liked-tracks");
+  request("http://localhost:8888/set-artists-image");
+  request("http://localhost:8888/create-playlist");
+  res.redirect("/")
+})
 
 module.exports = router

@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
   <head>
-    <title>Authorization Code flow with Spotify</title>
+    <title>Artists' Saved Songs</title>
     <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
     <style type="text/css">
       #login, #loggedin {
@@ -24,6 +24,7 @@
         <a href="/get-liked-tracks" class="btn btn-primary">Get liked tracks</a>
         <a href="/set-artists-image" class="btn btn-primary">Set artists' image</a>
         <a href="/create-playlist" class="btn btn-primary">Create playlist</a>
+        <a href="/run-process" class="btn btn-primary">Do everything</a>
       </div>
       <div id="loggedin">
         <div id="user-profile">
@@ -60,6 +61,7 @@
         <dt>Access token</dt><dd class="text-overflow">{{access_token}}</dd>
         <dt>Refresh token</dt><dd class="text-overflow">{{refresh_token}}</dd>
       </dl>
+      <a href="/return-home" class="btn btn-primary">Return home</a>
     </script>
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.1/handlebars.min.js"></script>
