@@ -1,0 +1,80 @@
+@import "./utility/utility.scss";
+
+// Bootstrap variable overrides
+$body-bg: $spotify-darkgrey;
+$body-color: $white;
+
+@import "../../../../node_modules/bootstrap/scss/bootstrap.scss";
+
+.navBar {
+  width: 100%;
+  position: sticky;
+  background: $spotify-green;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  color: $white;
+  padding: 0 30px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-family: $default-font;
+
+  h1 {
+    flex-grow: 1;
+    white-space: nowrap;
+    margin-right: 15px;
+  }
+
+  #navBarLogo {
+    max-height: 75px;
+    max-width: 150px;
+  }
+}
+
+.myContainer {
+  background-color: $black;
+  height: 800px;
+  padding: 0;
+}
+
+#content {
+  height: inherit;
+  margin-left: 30px;
+}
+
+#content>#login {
+  height: inherit;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+a {
+  display:inline-block;
+  vertical-align: middle;
+  margin-bottom: 25px;
+}
+
+.btn-primary {
+  background-color: $spotify-lightgreen;
+  font-family: $default-font;
+  width: 36%;
+}
+
+.btn-primary:hover {
+  background-color: $spotify-hover-lightgreen;
+}
+
+.btn-danger {
+  background-color: $spotify-red;
+  font-family: $default-font;
+  width: 36%;
+}
+
+.btn-danger:hover {
+  background-color: $spotify-hover-red;
+}

@@ -20,7 +20,6 @@ let router = express_routes.Router();
 let user: User;
 let aggregatedTracksByArtistList: AggregatedTracksByArtist[] = [];
 
-
 router.use(express_routes.static(__dirname + '/public'))
    .use(cors())
    .use(cookieParser())
