@@ -4,10 +4,16 @@
 $body-bg: $spotify-darkgrey;
 $body-color: $white;
 
+html, 
+body {
+    height: 100%;
+}
+
 @import "../../../../node_modules/bootstrap/scss/bootstrap.scss";
 
 .navBar {
   width: 100%;
+  height: 25%;
   position: sticky;
   background: $spotify-green;
   top: 0;
@@ -35,6 +41,7 @@ $body-color: $white;
 }
 
 .myContainer {
+  position: sticky;
   background-color: $black;
   height: 800px;
   padding: 0;
@@ -45,11 +52,11 @@ $body-color: $white;
   margin-left: 30px;
 }
 
-#content>#login {
+#content>#login, #content>#loggedin {
   height: inherit;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  padding-top: 100px;
   align-items: center;
 }
 
@@ -59,13 +66,13 @@ a {
   margin-bottom: 25px;
 }
 
-.btn-primary {
+.btn-success {
   background-color: $spotify-lightgreen;
   font-family: $default-font;
   width: 36%;
 }
 
-.btn-primary:hover {
+.btn-success:hover {
   background-color: $spotify-hover-lightgreen;
 }
 

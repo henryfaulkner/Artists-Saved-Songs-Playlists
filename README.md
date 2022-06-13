@@ -5,7 +5,7 @@ This Node.js app is meant to create playlists which imitate Spotify's deprecated
 ## Spotify Authorization Scopes used
 
 - playlist-modify-private
-- playlist-read-public
+- playlist-read-private
 - user-library-read
 
 ## Starting the server

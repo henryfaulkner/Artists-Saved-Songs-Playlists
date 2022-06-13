@@ -2,6 +2,7 @@
 <html>
   <head>
     <title>Artists' Saved Songs</title>
+    <link rel="icon" href="./assets/icons/Spotify_Icon_RGB_Green.png">
     <link href="./styles/css/styles.css" rel="stylesheet" type="text/css"/>
   </head>
 
@@ -13,13 +14,14 @@
       </div>
       <div id="content">
         <div id="login">
-          <a href="/login" class="btn btn-primary btn-lg">Log in with Spotify</a>
-          <a href="/get-liked-tracks" class="btn btn-primary btn-lg">Get liked tracks</a>
-          <a href="/set-artists-image" class="btn btn-primary btn-lg">Set artists' image</a>
-          <a href="/create-playlist" class="btn btn-primary btn-lg">Create playlist</a>
-          <a href="/run-process" class="btn btn-primary btn-lg">Do everything</a>
+          <a href="/login" class="btn btn-success btn-lg">Log in with Spotify</a>
         </div>
         <div id="loggedin">
+          <a href="/run-process" class="btn btn-success btn-lg">Create Artists' Saved Track Playlists</a>
+          <a href="/" class="btn btn-danger btn-lg">Logout</a>
+          <a href="/unfollow-root-playlists" class="btn btn-danger btn-lg">Remove Artists' Saved Track Playlists</a>
+        </div>
+        <div id="loggedinDeprcated" style="display: none;">
           <div id="user-profile">
           </div>
           <div id="oauth">

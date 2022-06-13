@@ -1,5 +1,4 @@
 const express_routes = require('express');
-const bodyParser = require("body-parser");
 let request = require('request'); // "Request" library
 let cors = require('cors');
 let querystring = require('querystring');
@@ -37,7 +36,7 @@ router.get('/login', function(req, res) {
   res.cookie(stateKey, state);
 
   // your application requests authorization
-  let scope = 'playlist-modify-private user-library-read';
+  let scope = 'playlist-modify-private playlist-read-private user-library-read';
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
       response_type: 'code',
@@ -217,7 +216,7 @@ router.post("/create-playlist", function(req, res) {
   const playlistOptions = {
     url: `https://api.spotify.com/v1/users/${user.id}/playlists`,
     body: {
-      name: req.body.Artist.name,
+      name: `${req.body.Artist.name} - $automated`,
       public: false, //private playlist
       collaborative: false,
       description: `Your favorite songs from ${req.body.Artist.name}`
@@ -235,7 +234,7 @@ router.post("/create-playlist", function(req, res) {
     //console.log(response.statusCode);
       
     //console.log(body)
-    res.send(body)
+    res.send(body);
   });
 });
 
@@ -292,5 +291,36 @@ router.get("/run-process", async function(req, res) {
   
   res.redirect("/")
 })
+
+router.get("/unfollow-root-playlists", function(req, res) {
+  let getPlaylistsOptions = {
+    url: `https://api.spotify.com/v1/users/${user.id}/playlists`,
+    headers: { 'authorization': 'Bearer ' + process.env.access_token },
+    'Content-Type': "application/json",
+    json: true
+  };
+
+  // Get all playlists 
+  request.get(getPlaylistsOptions, (error, response, body) => {
+    for(let i = 0; i < body["items"].length; i++) {
+      if(body["items"][i]["name"].includes("- $automated")) {
+        const deletePlaylistOptions = {
+          url: `https://api.spotify.com/v1/playlists/${body["items"][i]["id"]}/followers`,
+          headers: { 'authorization': 'Bearer ' + process.env.access_token },
+          method: "DELETE"
+        };
+
+        request.delete(deletePlaylistOptions, (error, response, body) => {
+          // Printing the error if occurred
+          if(error) console.log(error);
+          
+          // Printing status code
+          console.log(response.statusCode);
+        });
+      }
+    }
+  });
+  res.redirect("/");
+});
 
 module.exports = router
