@@ -1,4 +1,5 @@
 const express_routes = require('express');
+const bodyParser = require("body-parser");
 let request = require('request'); // "Request" library
 let cors = require('cors');
 let querystring = require('querystring');
@@ -7,6 +8,7 @@ require('dotenv').config();
 let helpers = require("./helpers");
 
 import AggregatedTracksByArtist from "./models/AggregatedTracksByArtist";
+import Playlist from "./models/Playlist";
 import Track from "./models/Track";
 import User from "./models/User";
 
@@ -21,7 +23,8 @@ let aggregatedTracksByArtistList: AggregatedTracksByArtist[] = [];
 
 router.use(express_routes.static(__dirname + '/public'))
    .use(cors())
-   .use(cookieParser());
+   .use(cookieParser())
+   .use(express_routes.json());
 
 router.get('/success', (req, res) => {
   res.send({
@@ -140,6 +143,7 @@ router.get("/return-home", function(req, res) {
   res.redirect("/");
 });
 
+// TODO: Order Artists alphabetically
 router.get("/get-liked-tracks", function(req, res) {
   let savedTracksOptions = {
       url: 'https://api.spotify.com/v1/me/tracks',
@@ -164,7 +168,6 @@ router.get("/get-liked-tracks", function(req, res) {
 
       aggregatedTracksByArtistList = helpers.GetAggregatedTracksByArtist(trackArr)
   })
-  res.redirect('/');
 });
 
 router.get("/set-artist-image", function(req, res) {
@@ -187,6 +190,7 @@ router.get("/set-artist-image", function(req, res) {
   });
 });
 
+// TODO: Use Add Custom Playlist Cover Image 
 router.get("/set-artists-image", function(req, res) {
   for(let i = 0; i < aggregatedTracksByArtistList.length; i++){
     let artistOptions = {
@@ -210,14 +214,14 @@ router.get("/set-artists-image", function(req, res) {
 });
 
 //req should be an Artist object
-router.get("/create-playlist", function(req, res) {
+router.post("/create-playlist", function(req, res) {
   const playlistOptions = {
     url: `https://api.spotify.com/v1/users/${user.id}/playlists`,
     body: {
-      name: 'Jungle',//req.name,
+      name: req.body.Artist.name,
       public: false, //private playlist
       collaborative: false,
-      description: `Your favorite songs from Jungle`//${req.name}`
+      description: `Your favorite songs from ${req.body.Artist.name}`
     },
     headers: { 'authorization': 'Bearer ' + process.env.access_token },
     'Content-Type': "application/json",
@@ -226,20 +230,67 @@ router.get("/create-playlist", function(req, res) {
 
   request.post(playlistOptions, (error, response, body) => {
     // Printing the error if occurred
-    if(error) console.log(error);
+    //if(error) console.log(error);
     
     // Printing status code
-    console.log(response.statusCode);
+    //console.log(response.statusCode);
       
-    console.log(body)
+    //console.log(body)
+    res.send(body)
   });
-  res.redirect('/');
 });
 
-router.get("/run-process", function(req, res) {
-  request("http://localhost:8888/get-liked-tracks");
-  request("http://localhost:8888/set-artists-image");
-  request("http://localhost:8888/create-playlist");
+// Main program thread
+router.get("/run-process", async function(req, res) {
+  await request("http://localhost:8888/get-liked-tracks");
+  await request("http://localhost:8888/set-artists-image");
+
+  // Create playlists
+  for(let i = 0; i < aggregatedTracksByArtistList.length; i++) {
+    let createPlaylistOptions = {
+      url: "http://localhost:8888/create-playlist",
+      body: aggregatedTracksByArtistList[i],
+      headers: { 'authorization': 'Bearer ' + process.env.access_token },
+      'Content-Type': "application/json",
+      json: true
+    }
+    await request.post(createPlaylistOptions, (error, response, body) => {
+      // Printing the error if occurred
+      if(error) console.log(error);
+      
+      // Printing status code
+      console.log(response.statusCode);
+        
+      const playlist: Playlist = new Playlist(body);
+      let trackUris: string[] = [];
+      for(let h = 0; h < aggregatedTracksByArtistList[i].Tracks.length; h++) {
+        trackUris.push(aggregatedTracksByArtistList[i].Tracks[h].uri);
+      }
+
+      console.log("trackUris")
+      console.log(trackUris)
+      console.log(playlist)
+
+      let addTracksOptions = {
+        url: `https://api.spotify.com/v1/playlists/${playlist.id}/tracks`,
+        body: {
+          position: "0",
+          uris: trackUris
+        },
+        headers: { 'authorization': 'Bearer ' + process.env.access_token },
+        'Content-Type': "application/json",
+        json: true
+      }
+      request.post(addTracksOptions, (error, response, body) => {
+        // Printing the error if occurred
+        if(error) console.log(error);
+        
+        // Printing status code
+        console.log(response.statusCode);
+      })
+    });
+  }
+  
   res.redirect("/")
 })
 

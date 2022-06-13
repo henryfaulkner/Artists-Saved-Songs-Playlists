@@ -1,5 +1,5 @@
 const express = require('express');
-const app = express();
+const app = express(express.json());
 
 let access_token;
 let refresh_token;
