@@ -12,3 +12,8 @@ This Node.js app is meant to create playlists which imitate Spotify's deprecated
 
 - run 'npm i'
 - run 'ts-node .' or 'npx nodemon src/server.ts' to run with nodemon
+
+## Development
+
+- Start server in one terminal
+- Use 'npm run scss' for continuous CSS compilation in another terminal
