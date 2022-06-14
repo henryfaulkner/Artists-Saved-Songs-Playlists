@@ -1,5 +1,6 @@
 const express_routes = require('express');
 let request = require('request'); // "Request" library
+let axios = require("axios");
 let cors = require('cors');
 let querystring = require('querystring');
 let cookieParser = require('cookie-parser');
@@ -161,10 +162,11 @@ router.get("/get-liked-tracks", function(req, res) {
       // creating Track objects from response
       const trackArr: Track[] = [];
       for(let i = 0; i < body['items']?.length ?? 0; i++) {
-          trackArr.push(new Track(body['items'][i]['track']))
+          trackArr.push(new Track(body['items'][i]['track']));
       }
 
-      aggregatedTracksByArtistList = helpers.GetAggregatedTracksByArtist(trackArr)
+      aggregatedTracksByArtistList = helpers.GetAggregatedTracksByArtist(trackArr);
+      res.send(aggregatedTracksByArtistList)
   })
 });
 
@@ -227,67 +229,68 @@ router.post("/create-playlist", function(req, res) {
   }
 
   request.post(playlistOptions, (error, response, body) => {
-    // Printing the error if occurred
-    //if(error) console.log(error);
-    
-    // Printing status code
-    //console.log(response.statusCode);
-      
-    //console.log(body)
     res.send(body);
   });
 });
 
 // Main program thread
 router.get("/run-process", async function(req, res) {
-  await request("http://localhost:8888/get-liked-tracks");
-  await request("http://localhost:8888/set-artists-image");
+  await axios.get("http://localhost:8888/get-liked-tracks")
+  .then(function (response) {
+    request("http://localhost:8888/set-artists-image");
 
-  // Create playlists
-  for(let i = 0; i < aggregatedTracksByArtistList.length; i++) {
-    let createPlaylistOptions = {
-      url: "http://localhost:8888/create-playlist",
-      body: aggregatedTracksByArtistList[i],
-      headers: { 'authorization': 'Bearer ' + process.env.access_token },
-      'Content-Type': "application/json",
-      json: true
-    }
-    await request.post(createPlaylistOptions, (error, response, body) => {
-      // Printing the error if occurred
-      if(error) console.log(error);
-      
-      // Printing status code
-      console.log(response.statusCode);
-        
-      const playlist: Playlist = new Playlist(body);
-      let trackUris: string[] = [];
-      for(let h = 0; h < aggregatedTracksByArtistList[i].Tracks.length; h++) {
-        trackUris.push(aggregatedTracksByArtistList[i].Tracks[h].uri);
-      }
-
-      console.log("trackUris")
-      console.log(trackUris)
-      console.log(playlist)
-
-      let addTracksOptions = {
-        url: `https://api.spotify.com/v1/playlists/${playlist.id}/tracks`,
-        body: {
-          position: "0",
-          uris: trackUris
-        },
+    // Create playlists
+    for(let i = 0; i < aggregatedTracksByArtistList.length; i++) {
+      let createPlaylistOptions = {
+        url: "http://localhost:8888/create-playlist",
+        body: aggregatedTracksByArtistList[i],
         headers: { 'authorization': 'Bearer ' + process.env.access_token },
         'Content-Type': "application/json",
         json: true
       }
-      request.post(addTracksOptions, (error, response, body) => {
+      request.post(createPlaylistOptions, (error, response, body) => {
         // Printing the error if occurred
         if(error) console.log(error);
         
         // Printing status code
         console.log(response.statusCode);
-      })
-    });
-  }
+          
+        const playlist: Playlist = new Playlist(body);
+        let trackUris: string[] = [];
+        for(let h = 0; h < aggregatedTracksByArtistList[i].Tracks.length; h++) {
+          trackUris.push(aggregatedTracksByArtistList[i].Tracks[h].uri);
+        }
+
+        let addTracksOptions = {
+          url: `https://api.spotify.com/v1/playlists/${playlist.id}/tracks`,
+          body: {
+            position: "0",
+            uris: trackUris
+          },
+          headers: { 'authorization': 'Bearer ' + process.env.access_token },
+          'Content-Type': "application/json",
+          json: true
+        }
+        request.post(addTracksOptions, (error, response, body) => {
+          // Printing the error if occurred
+          if(error) console.log(error);
+          
+          // Printing status code
+          console.log(response.statusCode);
+        })
+      });
+    }
+
+    // handle success
+    //console.log(response);
+  })
+  .catch(function (error) {
+    // handle error
+    console.log(error);
+  })
+  .then(function () {
+    
+  })
   
   res.redirect("/")
 })

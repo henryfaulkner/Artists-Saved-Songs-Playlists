@@ -27,8 +27,8 @@ const GetAggregatedTracksByArtist = (tracks: Track[]) => {
   const aggregatedTracksByArtistList: AggregatedTracksByArtist[] = [];
 
   for(let i = 0; i < tracks.length; i++) {
-    let index;
-    if(index = DoesArtistHaveAggregation(aggregatedTracksByArtistList, tracks[i].Artists[0])){
+    let index = DoesArtistHaveAggregation(aggregatedTracksByArtistList, tracks[i].Artists[0]);
+    if(index !== null){
       aggregatedTracksByArtistList[index].AddTrack(tracks[i]);
       continue;
     } 
@@ -52,11 +52,15 @@ const GetAggregatedTracksByArtist = (tracks: Track[]) => {
  */
 const DoesArtistHaveAggregation = (aggregatedTracksByArtistList: AggregatedTracksByArtist[], artist: Artist) => {
   for(let i = 0; i < aggregatedTracksByArtistList.length; i++) {
-    if(isEqual(artist, aggregatedTracksByArtistList[i]["Artist"])){
+    // console.log(artist.name)
+    // console.log(artist.id)
+    // console.log(aggregatedTracksByArtistList[i]["Artist"].name)
+    // console.log(aggregatedTracksByArtistList[i]["Artist"].id)
+    if(artist.id === aggregatedTracksByArtistList[i]["Artist"].id){
       return i;
     }
   }
-  return false;
+  return null;
 }
 
 module.exports = {GenerateRandomString, GetAggregatedTracksByArtist}
