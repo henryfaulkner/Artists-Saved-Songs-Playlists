@@ -43,12 +43,12 @@ body {
 .myContainer {
   position: sticky;
   background-color: $black;
-  height: 800px;
+  height: inherit;
   padding: 0;
 }
 
 #content {
-  height: inherit;
+  height: 75%;
   margin-left: 30px;
 }
 

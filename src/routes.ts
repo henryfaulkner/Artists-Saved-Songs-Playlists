@@ -37,7 +37,7 @@ router.get('/login', function(req, res) {
   res.cookie(stateKey, state);
 
   // your application requests authorization
-  let scope = 'playlist-modify-private playlist-read-private user-library-read';
+  let scope = 'playlist-modify-private playlist-read-private user-library-read ugc-image-upload';
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
       response_type: 'code',
@@ -96,6 +96,7 @@ router.get('/callback', function(req, res) {
         request.get(options, function(error, response, body) {
           user = body;
           console.log(body);
+          console.log(access_token)
         });
 
         // we can also pass the token to the browser to make requests from there
@@ -228,6 +229,7 @@ router.post("/create-playlist", function(req, res) {
   }
 
   request.post(playlistOptions, (error, response, body) => {
+    console.log(body)
     res.send(body);
   });
 });
@@ -277,6 +279,16 @@ router.get("/run-process", async function(req, res) {
           // Printing status code
           console.log(response.statusCode);
         })
+
+        let playlistImageOptions = {
+          url: `https://api.spotify.com/v1/playlists/{playlist_id}/image`,
+          body: {
+            
+          },
+          headers: { 'authorization': 'Bearer ' + process.env.access_token },
+          'Content-Type': "application/json",
+          json: true
+        };
       });
     }
 
