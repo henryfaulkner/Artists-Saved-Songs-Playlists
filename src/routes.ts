@@ -142,7 +142,6 @@ router.get("/return-home", function(req, res) {
   res.redirect("/");
 });
 
-// TODO: Order Artists alphabetically
 router.get("/get-liked-tracks", function(req, res) {
   let savedTracksOptions = {
       url: 'https://api.spotify.com/v1/me/tracks',
@@ -218,7 +217,7 @@ router.post("/create-playlist", function(req, res) {
   const playlistOptions = {
     url: `https://api.spotify.com/v1/users/${user.id}/playlists`,
     body: {
-      name: `${req.body.Artist.name} - $automated`,
+      name: `z${req.body.Artist.name} - $saved`,
       public: false, //private playlist
       collaborative: false,
       description: `Your favorite songs from ${req.body.Artist.name}`
@@ -306,7 +305,7 @@ router.get("/unfollow-root-playlists", function(req, res) {
   // Get all playlists 
   request.get(getPlaylistsOptions, (error, response, body) => {
     for(let i = 0; i < body["items"].length; i++) {
-      if(body["items"][i]["name"].includes("- $automated")) {
+      if(body["items"][i]["name"].includes("- $saved")) {
         const deletePlaylistOptions = {
           url: `https://api.spotify.com/v1/playlists/${body["items"][i]["id"]}/followers`,
           headers: { 'authorization': 'Bearer ' + process.env.access_token },
