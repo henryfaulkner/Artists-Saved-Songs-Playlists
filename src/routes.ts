@@ -143,7 +143,7 @@ router.get("/return-home", function(req, res) {
   res.redirect("/");
 });
 
-router.get("/get-liked-tracks", function(req, res) {
+router.get("/get-liked-tracks", async function(req, res) {
   let savedTracksOptions = {
       url: 'https://api.spotify.com/v1/me/tracks',
       headers: { 'authorization': 'Bearer ' + process.env.access_token },
@@ -151,23 +151,43 @@ router.get("/get-liked-tracks", function(req, res) {
       json: true
     };
 
-  request(savedTracksOptions, (error, response, body) => {
-   
-      // Printing the error if occurred
-      if(error) console.log(error)
-      
-      // Printing status code
-      console.log(response.statusCode);
-        
-      // creating Track objects from response
-      const trackArr: Track[] = [];
-      for(let i = 0; i < body['items']?.length ?? 0; i++) {
-          trackArr.push(new Track(body['items'][i]['track']));
-      }
+  let finiteLoop = 500;
+  try {
+    while(finiteLoop >= 0) {
+      let res = null;
+      await axios.get(savedTracksOptions.url, {
+        headers: savedTracksOptions.headers,
+        'Content-Type': savedTracksOptions["Content-Type"],
+        json: savedTracksOptions.json
+      }).then(function (response) {
+        res = response.data;
+    
+        // creating Track objects from response
+        const trackArr: Track[] = [];
+        for(let i = 0; i < res['items']?.length ?? 0; i++) {
+            trackArr.push(new Track(res['items'][i]['track']));
+        }
 
-      aggregatedTracksByArtistList = helpers.GetAggregatedTracksByArtist(trackArr);
-      res.send(aggregatedTracksByArtistList)
-  })
+        aggregatedTracksByArtistList = aggregatedTracksByArtistList.concat(helpers.GetAggregatedTracksByArtist(trackArr));
+      }).then(function(error){
+        if(error) console.log(error)
+      }).then(function() {
+        console.log("Done!")
+      })
+
+      if(res?.next === null) {
+        finiteLoop = 0;
+        res.send(aggregatedTracksByArtistList);
+      }
+      savedTracksOptions.url = res.next;
+      if(savedTracksOptions.url === undefined) finiteLoop = 0;
+      finiteLoop = finiteLoop - 1;
+    }
+  } catch(exception) {
+    console.log("exception occured")
+    console.log(exception)
+  }
+  res.send(aggregatedTracksByArtistList);
 });
 
 router.get("/set-artist-image", function(req, res) {
