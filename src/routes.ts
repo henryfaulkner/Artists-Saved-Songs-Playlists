@@ -156,7 +156,8 @@ router.get("/get-liked-tracks", async function(req, res) {
   try {
     while(finiteLoop >= 0) {
       let res = null;
-      await axios.get(savedTracksOptions.url, {
+      await axios(savedTracksOptions.url, {
+        method: 'GET',
         headers: savedTracksOptions.headers,
         'Content-Type': savedTracksOptions["Content-Type"],
         json: savedTracksOptions.json
@@ -178,14 +179,13 @@ router.get("/get-liked-tracks", async function(req, res) {
 
       if(res?.next === null) {
         finiteLoop = 0;
-        res.send(aggregatedTracksByArtistList);
       }
       savedTracksOptions.url = res.next;
       if(savedTracksOptions.url === undefined) finiteLoop = 0;
       finiteLoop = finiteLoop - 1;
     }
   } catch(exception) {
-    console.log("An exception occurred when getting liked tracks.")
+    console.log("An exception occurred when getting liked tracks.");
   }
   res.send(aggregatedTracksByArtistList);
 });
@@ -220,89 +220,99 @@ router.get("/set-artists-image", function(req, res) {
       if(error) console.log(error);
       if(response) console.log(response.statusCode);
         
-      if(body["images"] === undefined) aggregatedTracksByArtistList[i].Artist.Image = new Image({});
+      if(body === undefined || body["images"] === undefined) aggregatedTracksByArtistList[i].Artist.Image = new Image({});
       else aggregatedTracksByArtistList[i].Artist.Image = body["images"][0];
     });
   }
   res.redirect('/');
-});
-
-//req should be an Artist object
-router.post("/create-playlist", function(req, res) {
-  const playlistOptions = {
-    url: `https://api.spotify.com/v1/users/${user.id}/playlists`,
-    body: {
-      name: `z${req.body.Artist.name} - $saved`,
-      public: false, //private playlist
-      collaborative: false,
-      description: `Your favorite songs from ${req.body.Artist.name}`
-    },
-    headers: { 'authorization': 'Bearer ' + process.env.access_token },
-    'Content-Type': "application/json",
-    json: true
-  }
-
-  request.post(playlistOptions, (error, response, body) => {
-    console.log(body)
-    res.send(body);
-  });
-});
+})
 
 // Main program thread
 router.get("/run-process", async function(req, res) {
   await axios.get("http://localhost:8888/get-liked-tracks")
-  .then(function (response) {
-    request("http://localhost:8888/set-artists-image");
+  .catch(function(error) {
+    console.log("An exception occurred when getting tracks.")
+  });
 
-    // Create playlists
-    for(let i = 0; i < aggregatedTracksByArtistList.length; i++) {
-      let createPlaylistOptions = {
-        url: "http://localhost:8888/create-playlist",
-        body: aggregatedTracksByArtistList[i],
-        headers: { 'authorization': 'Bearer ' + process.env.access_token },
-        'Content-Type': "application/json",
+  // Create playlists
+  console.log('Bearer ' + process.env.access_token)
+  console.log('user_id ' + user.id)
+  for(let i = 0; i < aggregatedTracksByArtistList.length; i++) {
+    await axios(`https://api.spotify.com/v1/users/${user.id}/playlists`, {
+      method: 'POST',
+      data: {
+        name: `z${aggregatedTracksByArtistList[i].Artist.name} - $saved`,
+        public: false, //private playlist
+        collaborative: false,
+        description: `Your favorite songs from ${aggregatedTracksByArtistList[i].Artist.name}`
+      },
+      headers: { 
+        "Content-Type": "application/json",
+        'Accept' : 'application/json',
+        'authorization': 'Bearer ' + process.env.access_token 
+      },
+      json: true
+    })
+    .then(async function(response) {
+      if(response.statusCode == 429) console.log(response["Retry-After"]);
+        
+      const playlist: Playlist = new Playlist(response.data ?? {});
+      
+      let trackUris: string[] = [];
+      for(let h = 0; h < aggregatedTracksByArtistList[i].Tracks.length; h++) {
+        trackUris.push(aggregatedTracksByArtistList[i].Tracks[h].uri);
+      }
+
+      let addTracksOptions = {
+        url: `https://api.spotify.com/v1/playlists/${playlist.id}/tracks`,
+        data: {
+          position: "0",
+          uris: trackUris
+        },
+        headers: { 
+          'Content-Type': "application/json",
+          'authorization': 'Bearer ' + process.env.access_token 
+        },
         json: true
       }
-      request.post(createPlaylistOptions, (error, response, body) => {
-        if(error) console.log(error);
-        console.log(response.statusCode);
-          
-        const playlist: Playlist = new Playlist(body);
-        let trackUris: string[] = [];
-        for(let h = 0; h < aggregatedTracksByArtistList[i].Tracks.length; h++) {
-          trackUris.push(aggregatedTracksByArtistList[i].Tracks[h].uri);
+      await axios(addTracksOptions.url, {
+        method: 'POST',
+        data: addTracksOptions.data,
+        headers: addTracksOptions.headers,
+        json: addTracksOptions.json
+      })
+      .then(function(response) {
+        if(response.statusCode == 429) console.log(response["Retry-After"]);
+      })
+      .catch(function(error) {
+        console.log("An exception occurred when adding tracks.");
+        console.log(error.response.status)
+        if (error.response.status === 401) {
+          console.log("401 Error")
         }
-
-        let addTracksOptions = {
-          url: `https://api.spotify.com/v1/playlists/${playlist.id}/tracks`,
-          body: {
-            position: "0",
-            uris: trackUris
-          },
-          headers: { 'authorization': 'Bearer ' + process.env.access_token },
-          'Content-Type': "application/json",
-          json: true
+        if (error.response.status === 404) {
+          console.log(response.data)
         }
-        request.post(addTracksOptions, (error, response, body) => {
-          if(error) console.log(error);
-          console.log(response.statusCode);
-        })
-
-        let playlistImageOptions = {
-          url: `https://api.spotify.com/v1/playlists/{playlist_id}/image`,
-          body: {
-            
-          },
-          headers: { 'authorization': 'Bearer ' + process.env.access_token },
-          'Content-Type': "application/json",
-          json: true
-        };
       });
-    }
-  })
-  .catch(function (error) {
-    console.log("An exception occurred in the main thread.");
-  })
+
+      // let playlistImageOptions = {
+      //   url: `https://api.spotify.com/v1/playlists/{playlist_id}/image`,
+      //   body: {
+          
+      //   },
+      //   headers: { 'authorization': 'Bearer ' + process.env.access_token },
+      //   'Content-Type': "application/json",
+      //   json: true
+      // };
+    })
+    .catch(function(error) {
+      console.log("An exception occurred when creating a playlist.")
+      console.log(error.response.status)
+      if (error.response.status === 401) {
+        console.log("401 Error")
+      }
+    });
+  }
   
   res.redirect("/")
 })
@@ -319,57 +329,57 @@ router.get("/unfollow-root-playlists", async function(req, res) {
     };
 
     let finiteLoop = 500;
-    try {
       while(finiteLoop >= 0) {
-        let res = null;
-        // Get all playlists 
-        await axios.get(getPlaylistsOptions.url, {
-          headers: getPlaylistsOptions.headers,
-          'Content-Type': getPlaylistsOptions["Content-Type"],
-          json: getPlaylistsOptions.json
-        })
-        .then(async function(response) {
-          res = response.data;
-          for(let i = 0; i < response.data["items"].length; i++) {
-            if(response.data["items"][i]["name"].includes("- $saved")) {
-              const deletePlaylistOptions = {
-                url: `https://api.spotify.com/v1/playlists/${response.data["items"][i]["id"]}/followers`,
-                headers: { 'authorization': 'Bearer ' + process.env.access_token },
-                method: "DELETE",
-                'Content-Type': "application/json",
-                json: true
-              };
+        try {
+          let res = null;
+          // Get all playlists 
+          await axios.get(getPlaylistsOptions.url, {
+            headers: getPlaylistsOptions.headers,
+            'Content-Type': getPlaylistsOptions["Content-Type"],
+            json: getPlaylistsOptions.json
+          })
+          .then(async function(response) {
+            res = response.data;
+            for(let i = 0; i < response.data["items"].length; i++) {
+              if(response.data["items"][i]["name"].includes("- $saved")) {
+                const deletePlaylistOptions = {
+                  url: `https://api.spotify.com/v1/playlists/${response.data["items"][i]["id"]}/followers`,
+                  headers: { 'authorization': 'Bearer ' + process.env.access_token },
+                  method: "DELETE",
+                  'Content-Type': "application/json",
+                  json: true
+                };
 
-              await axios.delete(deletePlaylistOptions.url, {
-                headers: deletePlaylistOptions.headers,
-                'Content-Type': deletePlaylistOptions["Content-Type"],
-                json: deletePlaylistOptions.json,
-                method: deletePlaylistOptions.method
-              })
-              .then(function(response) {
-                console.log(response.status);
-              })
-              .catch(function(error) {
-                console.log(error.response.status);
-                if(error.response.status === 502) {
+                await axios.delete(deletePlaylistOptions.url, {
+                  headers: deletePlaylistOptions.headers,
+                  'Content-Type': deletePlaylistOptions["Content-Type"],
+                  json: deletePlaylistOptions.json,
+                  method: deletePlaylistOptions.method
+                })
+                .then(function(response) {
+                  console.log(response.status);
+                })
+                .catch(function(error) {
                   console.log(error.response.status);
-                  hasFiveOTwo = true;
-                }
-              });
+                  if(error.response.status === 502) {
+                    console.log(error.response.status);
+                    hasFiveOTwo = true;
+                  }
+                });
+              }
             }
+          });
+          if(res?.next === null) {
+            finiteLoop = 0;
           }
-        });
-        if(res?.next === null) {
-          finiteLoop = 0;
-          res.send(aggregatedTracksByArtistList);
+          getPlaylistsOptions.url = res.next;
+          if(getPlaylistsOptions.url === undefined) finiteLoop = 0;
+          finiteLoop = finiteLoop - 1;
+        } catch(exception) {
+          console.log("An exception occurred when removing playlists.")
         }
-        getPlaylistsOptions.url = res.next;
-        if(getPlaylistsOptions.url === undefined) finiteLoop = 0;
-        finiteLoop = finiteLoop - 1;
-      }
-    } catch(exception) {
-      console.log("exception occured")
     }
+    
     if(hasFiveOTwo) console.log("Looping through all playlists again.")
     console.log(hasFiveOTwo)
   }
