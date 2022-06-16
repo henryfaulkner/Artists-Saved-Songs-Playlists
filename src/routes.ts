@@ -11,6 +11,7 @@ import AggregatedTracksByArtist from "./models/AggregatedTracksByArtist";
 import Playlist from "./models/Playlist";
 import Track from "./models/Track";
 import User from "./models/User";
+import Image from "./models/Image"
 
 const client_id: string = process.env.CLIENT_ID; // Your client id
 const client_secret: string = process.env.CLIENT_SECRET; // Your secret
@@ -184,8 +185,7 @@ router.get("/get-liked-tracks", async function(req, res) {
       finiteLoop = finiteLoop - 1;
     }
   } catch(exception) {
-    console.log("exception occured")
-    console.log(exception)
+    console.log("An exception occurred when getting liked tracks.")
   }
   res.send(aggregatedTracksByArtistList);
 });
@@ -199,11 +199,7 @@ router.get("/set-artist-image", function(req, res) {
   };
 
   request(artistOptions, (error, response, body) => {
-   
-    // Printing the error if occurred
     if(error) console.log(error);
-    
-    // Printing status code
     console.log(response.statusCode);
       
     res = body["images"];
@@ -221,13 +217,11 @@ router.get("/set-artists-image", function(req, res) {
     };
 
     request(artistOptions, (error, response, body) => {
-      // Printing the error if occurred
       if(error) console.log(error);
-      
-      // Printing status code
-      console.log(response.statusCode);
+      if(response) console.log(response.statusCode);
         
-      aggregatedTracksByArtistList[i].Artist.Image = body["images"][0];
+      if(body["images"] === undefined) aggregatedTracksByArtistList[i].Artist.Image = new Image({});
+      else aggregatedTracksByArtistList[i].Artist.Image = body["images"][0];
     });
   }
   res.redirect('/');
@@ -270,10 +264,7 @@ router.get("/run-process", async function(req, res) {
         json: true
       }
       request.post(createPlaylistOptions, (error, response, body) => {
-        // Printing the error if occurred
         if(error) console.log(error);
-        
-        // Printing status code
         console.log(response.statusCode);
           
         const playlist: Playlist = new Playlist(body);
@@ -293,10 +284,7 @@ router.get("/run-process", async function(req, res) {
           json: true
         }
         request.post(addTracksOptions, (error, response, body) => {
-          // Printing the error if occurred
           if(error) console.log(error);
-          
-          // Printing status code
           console.log(response.statusCode);
         })
 
@@ -311,49 +299,81 @@ router.get("/run-process", async function(req, res) {
         };
       });
     }
-
-    // handle success
-    //console.log(response);
   })
   .catch(function (error) {
-    // handle error
-    console.log(error);
-  })
-  .then(function () {
-    
+    console.log("An exception occurred in the main thread.");
   })
   
   res.redirect("/")
 })
 
-router.get("/unfollow-root-playlists", function(req, res) {
-  let getPlaylistsOptions = {
-    url: `https://api.spotify.com/v1/users/${user.id}/playlists`,
-    headers: { 'authorization': 'Bearer ' + process.env.access_token },
-    'Content-Type': "application/json",
-    json: true
-  };
+router.get("/unfollow-root-playlists", async function(req, res) {
+  let hasFiveOTwo: boolean = true;
+  while(hasFiveOTwo) {
+    hasFiveOTwo = false;
+    let getPlaylistsOptions = {
+      url: `https://api.spotify.com/v1/users/${user.id}/playlists`,
+      headers: { 'authorization': 'Bearer ' + process.env.access_token },
+      'Content-Type': "application/json",
+      json: true
+    };
 
-  // Get all playlists 
-  request.get(getPlaylistsOptions, (error, response, body) => {
-    for(let i = 0; i < body["items"].length; i++) {
-      if(body["items"][i]["name"].includes("- $saved")) {
-        const deletePlaylistOptions = {
-          url: `https://api.spotify.com/v1/playlists/${body["items"][i]["id"]}/followers`,
-          headers: { 'authorization': 'Bearer ' + process.env.access_token },
-          method: "DELETE"
-        };
+    let finiteLoop = 500;
+    try {
+      while(finiteLoop >= 0) {
+        let res = null;
+        // Get all playlists 
+        await axios.get(getPlaylistsOptions.url, {
+          headers: getPlaylistsOptions.headers,
+          'Content-Type': getPlaylistsOptions["Content-Type"],
+          json: getPlaylistsOptions.json
+        })
+        .then(async function(response) {
+          res = response.data;
+          for(let i = 0; i < response.data["items"].length; i++) {
+            if(response.data["items"][i]["name"].includes("- $saved")) {
+              const deletePlaylistOptions = {
+                url: `https://api.spotify.com/v1/playlists/${response.data["items"][i]["id"]}/followers`,
+                headers: { 'authorization': 'Bearer ' + process.env.access_token },
+                method: "DELETE",
+                'Content-Type': "application/json",
+                json: true
+              };
 
-        request.delete(deletePlaylistOptions, (error, response, body) => {
-          // Printing the error if occurred
-          if(error) console.log(error);
-          
-          // Printing status code
-          console.log(response.statusCode);
+              await axios.delete(deletePlaylistOptions.url, {
+                headers: deletePlaylistOptions.headers,
+                'Content-Type': deletePlaylistOptions["Content-Type"],
+                json: deletePlaylistOptions.json,
+                method: deletePlaylistOptions.method
+              })
+              .then(function(response) {
+                console.log(response.status);
+              })
+              .catch(function(error) {
+                console.log(error.response.status);
+                if(error.response.status === 502) {
+                  console.log(error.response.status);
+                  hasFiveOTwo = true;
+                }
+              });
+            }
+          }
         });
+        if(res?.next === null) {
+          finiteLoop = 0;
+          res.send(aggregatedTracksByArtistList);
+        }
+        getPlaylistsOptions.url = res.next;
+        if(getPlaylistsOptions.url === undefined) finiteLoop = 0;
+        finiteLoop = finiteLoop - 1;
       }
+    } catch(exception) {
+      console.log("exception occured")
     }
-  });
+    if(hasFiveOTwo) console.log("Looping through all playlists again.")
+    console.log(hasFiveOTwo)
+  }
+  console.log("Finished deleting playlists.")
   res.redirect("/");
 });
 
