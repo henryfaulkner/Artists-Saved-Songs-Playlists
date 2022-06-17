@@ -19,6 +19,25 @@ const GenerateRandomString = function(length) {
 };
 
 /**
+ * Concatenates two aggregate track lists with no repeating artists.
+ * @param {AggregatedTracksByArtist[]} list of list of tracks aggregated
+ * @param {AggregatedTracksByArtist[]} list of list of tracks aggregated
+ * @return {AggregatedTracksByArtist[]} list of list of tracks aggregated by Artist
+ */
+const RemoveDuplicateTrackLists = (allList: AggregatedTracksByArtist[]) => {
+  // Find appropriate sorting algorithm 
+  for(let i = 0; i < allList.length; i++) {
+    for(let h = i+1; h < allList.length; h++) {
+      if(allList[i].Artist.name === allList[h].Artist.name) {
+        allList[i].Tracks = allList[i].Tracks.concat(allList[h].Tracks);
+        allList.splice(h, 1);
+      }
+    }
+  }
+  return allList;
+}
+
+/**
  * Takes song items' array and parses and aggregates them by artist
  * @param {Track[]} list of Tracks
  * @return {AggregatedTracksByArtist[]} list of list of tracks aggregated by Artist
@@ -52,10 +71,6 @@ const GetAggregatedTracksByArtist = (tracks: Track[]) => {
  */
 const DoesArtistHaveAggregation = (aggregatedTracksByArtistList: AggregatedTracksByArtist[], artist: Artist) => {
   for(let i = 0; i < aggregatedTracksByArtistList.length; i++) {
-    // console.log(artist.name)
-    // console.log(artist.id)
-    // console.log(aggregatedTracksByArtistList[i]["Artist"].name)
-    // console.log(aggregatedTracksByArtistList[i]["Artist"].id)
     if(artist.id === aggregatedTracksByArtistList[i]["Artist"].id){
       return i;
     }
@@ -63,4 +78,4 @@ const DoesArtistHaveAggregation = (aggregatedTracksByArtistList: AggregatedTrack
   return null;
 }
 
-module.exports = {GenerateRandomString, GetAggregatedTracksByArtist}
+module.exports = {GenerateRandomString, GetAggregatedTracksByArtist, RemoveDuplicateTrackLists}

@@ -140,6 +140,11 @@ router.get('/refresh_token', function(req, res) {
   });
 });
 
+router.get('/logout', function(req, res) {
+  res.clearCookie(stateKey);
+  res.redirect("/");
+});
+
 router.get("/return-home", function(req, res) {
   res.redirect("/");
 });
@@ -170,6 +175,7 @@ router.get("/get-liked-tracks", async function(req, res) {
             trackArr.push(new Track(res['items'][i]['track']));
         }
 
+        // Get all the playlists
         aggregatedTracksByArtistList = aggregatedTracksByArtistList.concat(helpers.GetAggregatedTracksByArtist(trackArr));
       }).then(function(error){
         if(error) console.log(error)
@@ -186,7 +192,9 @@ router.get("/get-liked-tracks", async function(req, res) {
     }
   } catch(exception) {
     console.log("An exception occurred when getting liked tracks.");
+    console.log(exception);
   }
+  helpers.RemoveDuplicateTrackLists(aggregatedTracksByArtistList)
   res.send(aggregatedTracksByArtistList);
 });
 
@@ -235,29 +243,26 @@ router.get("/run-process", async function(req, res) {
   });
 
   // Create playlists
-  console.log('Bearer ' + process.env.access_token)
-  console.log('user_id ' + user.id)
   for(let i = 0; i < aggregatedTracksByArtistList.length; i++) {
-    await axios(`https://api.spotify.com/v1/users/${user.id}/playlists`, {
-      method: 'POST',
-      data: {
-        name: `z${aggregatedTracksByArtistList[i].Artist.name} - $saved`,
-        public: false, //private playlist
-        collaborative: false,
-        description: `Your favorite songs from ${aggregatedTracksByArtistList[i].Artist.name}`
-      },
-      headers: { 
-        "Content-Type": "application/json",
-        'Accept' : 'application/json',
-        'authorization': 'Bearer ' + process.env.access_token 
-      },
-      json: true
-    })
-    .then(async function(response) {
+    try {
+      const response = await axios(`https://api.spotify.com/v1/users/${user.id}/playlists`, {
+        method: 'POST',
+        data: {
+          name: `z${aggregatedTracksByArtistList[i].Artist.name} - $saved`,
+          public: false, //private playlist
+          collaborative: false,
+          description: `Your favorite songs from ${aggregatedTracksByArtistList[i].Artist.name}`
+        },
+        headers: { 
+          "Content-Type": "application/json",
+          'Accept' : 'application/json',
+          'authorization': 'Bearer ' + process.env.access_token 
+        },
+        json: true
+      });
+
       if(response.statusCode == 429) console.log(response["Retry-After"]);
-        
       const playlist: Playlist = new Playlist(response.data ?? {});
-      
       let trackUris: string[] = [];
       for(let h = 0; h < aggregatedTracksByArtistList[i].Tracks.length; h++) {
         trackUris.push(aggregatedTracksByArtistList[i].Tracks[h].uri);
@@ -275,43 +280,23 @@ router.get("/run-process", async function(req, res) {
         },
         json: true
       }
-      await axios(addTracksOptions.url, {
-        method: 'POST',
-        data: addTracksOptions.data,
-        headers: addTracksOptions.headers,
-        json: addTracksOptions.json
-      })
-      .then(function(response) {
-        if(response.statusCode == 429) console.log(response["Retry-After"]);
-      })
-      .catch(function(error) {
-        console.log("An exception occurred when adding tracks.");
-        console.log(error.response.status)
-        if (error.response.status === 401) {
-          console.log("401 Error")
-        }
-        if (error.response.status === 404) {
-          console.log(response.data)
-        }
-      });
-
-      // let playlistImageOptions = {
-      //   url: `https://api.spotify.com/v1/playlists/{playlist_id}/image`,
-      //   body: {
-          
-      //   },
-      //   headers: { 'authorization': 'Bearer ' + process.env.access_token },
-      //   'Content-Type': "application/json",
-      //   json: true
-      // };
-    })
-    .catch(function(error) {
+      try {
+        await axios(addTracksOptions.url, {
+          method: 'POST',
+          data: addTracksOptions.data,
+          headers: addTracksOptions.headers,
+          json: addTracksOptions.json
+        })
+      } catch(error) {
+        console.log("An exception occurred when adding a track.")
+      }
+    } catch(error) {
       console.log("An exception occurred when creating a playlist.")
       console.log(error.response.status)
       if (error.response.status === 401) {
         console.log("401 Error")
       }
-    });
+    };
   }
   
   res.redirect("/")
