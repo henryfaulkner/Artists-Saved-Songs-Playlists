@@ -244,61 +244,72 @@ router.get("/run-process", async function(req, res) {
 
   // Create playlists
   for(let i = 0; i < aggregatedTracksByArtistList.length; i++) {
-    try {
-      const response = await axios(`https://api.spotify.com/v1/users/${user.id}/playlists`, {
-        method: 'POST',
-        data: {
-          name: `z${aggregatedTracksByArtistList[i].Artist.name} - $saved`,
-          public: false, //private playlist
-          collaborative: false,
-          description: `Your favorite songs from ${aggregatedTracksByArtistList[i].Artist.name}`
-        },
-        headers: { 
-          "Content-Type": "application/json",
-          'Accept' : 'application/json',
-          'authorization': 'Bearer ' + process.env.access_token 
-        },
-        json: true
-      });
-
-      if(response.statusCode == 429) console.log(response["Retry-After"]);
-      const playlist: Playlist = new Playlist(response.data ?? {});
-      let trackUris: string[] = [];
-      for(let h = 0; h < aggregatedTracksByArtistList[i].Tracks.length; h++) {
-        trackUris.push(aggregatedTracksByArtistList[i].Tracks[h].uri);
-      }
-
-      let addTracksOptions = {
-        url: `https://api.spotify.com/v1/playlists/${playlist.id}/tracks`,
-        data: {
-          position: "0",
-          uris: trackUris
-        },
-        headers: { 
-          'Content-Type': "application/json",
-          'authorization': 'Bearer ' + process.env.access_token 
-        },
-        json: true
-      }
+    let playlist: Playlist = null
+    for(let h = 0; h < 5; h++) {
+      if(h > 0) console.log("Playlist creation retry. " + h)
       try {
-        await axios(addTracksOptions.url, {
+        await axios(`https://api.spotify.com/v1/users/${user.id}/playlists`, {
+          method: 'POST',
+          data: {
+            name: `z${aggregatedTracksByArtistList[i].Artist.name} - $saved`,
+            public: false, //private playlist
+            collaborative: false,
+            description: `Your favorite songs from ${aggregatedTracksByArtistList[i].Artist.name}`
+          },
+          headers: { 
+            "Content-Type": "application/json",
+            'Accept' : 'application/json',
+            'authorization': 'Bearer ' + process.env.access_token 
+          },
+          json: true
+        }).then((res) => {
+          if(res.status === 201) h = 5;
+          playlist = new Playlist(res.data ?? {});
+          console.log("Add playlist: " + res.status);
+        });  
+        
+      } catch(error) {
+        console.log("An exception occurred when creating a playlist.")
+      };
+    }
+
+    let trackUris: string[] = [];
+    for(let h = 0; h < aggregatedTracksByArtistList[i].Tracks.length; h++) {
+      trackUris.push(aggregatedTracksByArtistList[i].Tracks[h].uri);
+    }
+
+    if(playlist === null) continue;
+    let addTracksOptions = {
+      url: `https://api.spotify.com/v1/playlists/${playlist.id}/tracks`,
+      data: {
+        position: "0",
+        uris: trackUris
+      },
+      headers: { 
+        'Content-Type': "application/json",
+        'authorization': 'Bearer ' + process.env.access_token 
+      },
+      json: true
+    }
+    for(let f = 0; f < 5; f++){
+      if(f > 0) console.log("Retry adding track. " + f)
+      try {
+        const response = await axios(addTracksOptions.url, {
           method: 'POST',
           data: addTracksOptions.data,
           headers: addTracksOptions.headers,
           json: addTracksOptions.json
+        }).then((res) => {
+          if(res.status === 201 || res.status === 200) f = 5;
+          console.log("Add track: "+res.status)
         })
+        
       } catch(error) {
         console.log("An exception occurred when adding a track.")
       }
-    } catch(error) {
-      console.log("An exception occurred when creating a playlist.")
-      console.log(error.response.status)
-      if (error.response.status === 401) {
-        console.log("401 Error")
-      }
-    };
+    }
   }
-  
+
   res.redirect("/")
 })
 
