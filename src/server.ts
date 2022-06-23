@@ -8,4 +8,4 @@ app.use(require("./routes"))
 
 console.log("Listening on port 8888")
 const server = app.listen(8888)
-server.setTimeout(10*60*1000) //10min timeout for connections
+server.setTimeout(75*60*1000) //75min timeout for connections

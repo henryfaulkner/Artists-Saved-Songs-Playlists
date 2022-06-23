@@ -160,33 +160,29 @@ router.get("/get-liked-tracks", async function(req, res) {
   let finiteLoop = 500;
   try {
     while(finiteLoop >= 0) {
-      let res = null;
-      await axios(savedTracksOptions.url, {
+      let res = await axios(savedTracksOptions.url, {
         method: 'GET',
         headers: savedTracksOptions.headers,
         'Content-Type': savedTracksOptions["Content-Type"],
         json: savedTracksOptions.json
-      }).then(function (response) {
-        res = response;
-    
-        // creating Track objects from response
-        const trackArr: Track[] = [];
-        for(let i = 0; i < res.data['items']?.length ?? 0; i++) {
-            trackArr.push(new Track(res.data['items'][i]['track']));
-        }
+      });
+      
+      const trackArr: Track[] = [];
+      for(let i = 0; i < res.data['items']?.length ?? 0; i++) {
+        trackArr.push(new Track(res.data['items'][i]['track']));
+      }
 
-        // Get all the playlists
-        aggregatedTracksByArtistList = aggregatedTracksByArtistList.concat(helpers.GetAggregatedTracksByArtist(trackArr));
-      }).then(function(error){
-        if(error) console.log(error)
-      }).then(function() {
-        console.log("Done!")
-      })
+      // Get all the playlists
+      aggregatedTracksByArtistList = aggregatedTracksByArtistList.concat(helpers.GetAggregatedTracksByArtist(trackArr));
 
       if(res.data?.next === null) {
+        console.log(res)
+      }
+      if(res.data?.next === null && res.data?.total !== 0) {
         finiteLoop = 0;
       }
       savedTracksOptions.url = res.data.next;
+      if(res.data.total === 0) savedTracksOptions.url = res.data.href;
       console.log(res.status)
       console.log(res.data.next)
       if(savedTracksOptions.url === undefined) finiteLoop = 0;
