@@ -167,12 +167,12 @@ router.get("/get-liked-tracks", async function(req, res) {
         'Content-Type': savedTracksOptions["Content-Type"],
         json: savedTracksOptions.json
       }).then(function (response) {
-        res = response.data;
+        res = response;
     
         // creating Track objects from response
         const trackArr: Track[] = [];
-        for(let i = 0; i < res['items']?.length ?? 0; i++) {
-            trackArr.push(new Track(res['items'][i]['track']));
+        for(let i = 0; i < res.data['items']?.length ?? 0; i++) {
+            trackArr.push(new Track(res.data['items'][i]['track']));
         }
 
         // Get all the playlists
@@ -183,10 +183,12 @@ router.get("/get-liked-tracks", async function(req, res) {
         console.log("Done!")
       })
 
-      if(res?.next === null) {
+      if(res.data?.next === null) {
         finiteLoop = 0;
       }
-      savedTracksOptions.url = res.next;
+      savedTracksOptions.url = res.data.next;
+      console.log(res.status)
+      console.log(res.data.next)
       if(savedTracksOptions.url === undefined) finiteLoop = 0;
       finiteLoop = finiteLoop - 1;
     }
@@ -194,7 +196,8 @@ router.get("/get-liked-tracks", async function(req, res) {
     console.log("An exception occurred when getting liked tracks.");
     console.log(exception);
   }
-  helpers.RemoveDuplicateTrackLists(aggregatedTracksByArtistList)
+  console.log("FINISHED GETTING TRACKS.")
+  aggregatedTracksByArtistList = helpers.RemoveDuplicateTrackLists(aggregatedTracksByArtistList);
   res.send(aggregatedTracksByArtistList);
 });
 
@@ -237,10 +240,8 @@ router.get("/set-artists-image", function(req, res) {
 
 // Main program thread
 router.get("/run-process", async function(req, res) {
+  console.log("Run Process")
   await axios.get("http://localhost:8888/get-liked-tracks")
-  .catch(function(error) {
-    console.log("An exception occurred when getting tracks.")
-  });
 
   // Create playlists
   for(let i = 0; i < aggregatedTracksByArtistList.length; i++) {
@@ -301,16 +302,16 @@ router.get("/run-process", async function(req, res) {
           json: addTracksOptions.json
         }).then((res) => {
           if(res.status === 201 || res.status === 200) f = 5;
-          console.log("Add track: "+res.status)
+          console.log("Add track: "+res.status);
         })
         
       } catch(error) {
-        console.log("An exception occurred when adding a track.")
+        console.log("An exception occurred when adding a track.");
       }
     }
   }
-
-  res.redirect("/")
+  console.log("Finished creating playlists!");
+  res.redirect(200, "../");
 })
 
 router.get("/unfollow-root-playlists", async function(req, res) {
@@ -380,7 +381,7 @@ router.get("/unfollow-root-playlists", async function(req, res) {
     console.log(hasFiveOTwo)
   }
   console.log("Finished deleting playlists.")
-  res.redirect("/");
+  res.redirect(200, "../");
 });
 
 module.exports = router
