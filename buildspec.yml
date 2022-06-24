@@ -8,17 +8,22 @@ phases:
     run-as: admin
     runtime-versions:
       nodejs: 12
-  pre_build:
-    run-as: admin
     commands:
+      - echo Install phase...
+  pre_build:
+    commands:
+      - echo Installing source NPM dependencies...
       - npm install
+      - echo Compiling SASS...
       - npm run compile-sass
   build:
-    run-as: admin
     commands:
+      - echo Build started on `date`
+      - echo Compiling the Node.js code
       - ts-node .
   post_build:
-    run-as: admin
+    commands:
+      - echo Build completed on `date`
 # Include only the files required for your application to run.
 # Do not use recursively include artifacts from node_modules directory as it will include unnecessary packages
 # used only for building and testing.
