@@ -16,4 +16,5 @@ This Node.js app is meant to create playlists which imitate Spotify's deprecated
 ## Development
 
 - Start server in one terminal
-- Use 'npm run scss' for continuous CSS compilation in another terminal
+- Use 'npm run watch-sass' for continuous CSS compilation in another terminal
+  or 'npm run compile-sass' for immediate compilation.

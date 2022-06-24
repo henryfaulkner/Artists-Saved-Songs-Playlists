@@ -5,7 +5,8 @@
   "version": "0.0.1",
   "main": "src/server.ts",
   "scripts": {
-    "scss": "node-sass --watch ./src/public/styles/scss -o ./src/public/styles/css"
+    "watch-sass": "node-sass --watch ./src/public/styles/scss -o ./src/public/styles/css",
+    "compile-sass": "node-sass ./src/public/styles/scss -o ./src/public/styles/css"
   },
   "dependencies": {
     "@types/express": "^4.17.13",

@@ -28,7 +28,7 @@ const RemoveDuplicateTrackLists = (allList: AggregatedTracksByArtist[]) => {
   // Find appropriate sorting algorithm 
   for(let i = 0; i < allList.length; i++) {
     for(let h = i+1; h < allList.length; h++) {
-      if(allList[i].Artist.name === allList[h].Artist.name) {
+      if(allList[i].Artist.id === allList[h].Artist.id) {
         allList[i].Tracks = allList[i].Tracks.concat(allList[h].Tracks);
         allList.splice(h, 1);
       }

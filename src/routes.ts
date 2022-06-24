@@ -307,7 +307,7 @@ router.get("/run-process", async function(req, res) {
     }
   }
   console.log("Finished creating playlists!");
-  res.redirect(200, "../");
+  res.redirect("/");
 })
 
 router.get("/unfollow-root-playlists", async function(req, res) {
@@ -377,7 +377,7 @@ router.get("/unfollow-root-playlists", async function(req, res) {
     console.log(hasFiveOTwo)
   }
   console.log("Finished deleting playlists.")
-  res.redirect(200, "../");
+  res.redirect("/");
 });
 
 module.exports = router
