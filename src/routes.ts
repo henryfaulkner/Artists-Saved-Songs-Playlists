@@ -6,6 +6,7 @@ let querystring = require('querystring');
 let cookieParser = require('cookie-parser');
 require('dotenv').config();
 let helpers = require("./helpers");
+import { config } from "./config/config"
 
 import AggregatedTracksByArtist from "./models/AggregatedTracksByArtist";
 import Playlist from "./models/Playlist";
@@ -15,7 +16,7 @@ import Image from "./models/Image"
 
 const client_id: string = process.env.CLIENT_ID; // Your client id
 const client_secret: string = process.env.CLIENT_SECRET; // Your secret
-const redirect_uri: string = 'http://localhost:8888/callback'; // Your redirect uri
+const redirect_uri: string = `${config.server.domain}/callback`; // Your redirect uri
 let stateKey = 'spotify_auth_state';
 let router = express_routes.Router();
 let user: User;
@@ -237,7 +238,7 @@ router.get("/set-artists-image", function(req, res) {
 // Main program thread
 router.get("/run-process", async function(req, res) {
   console.log("Run Process")
-  await axios.get("http://localhost:8888/get-liked-tracks")
+  await axios.get(`${config.server.domain}/get-liked-tracks`)
 
   // Create playlists
   for(let i = 0; i < aggregatedTracksByArtistList.length; i++) {

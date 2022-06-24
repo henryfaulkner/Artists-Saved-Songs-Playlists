@@ -5,6 +5,7 @@
   "version": "0.0.1",
   "main": "src/server.ts",
   "scripts": {
+    "build": "tsc",
     "watch-sass": "node-sass --watch ./src/public/styles/scss -o ./src/public/styles/css",
     "compile-sass": "node-sass ./src/public/styles/scss -o ./src/public/styles/css"
   },
