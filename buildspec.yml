@@ -1,24 +1,30 @@
 # Do not change version. This is the version of aws buildspec, not the version of your buldspec file.
 version: 0.2
 
+run-as: admin
+
 phases:
   install:
+    run-as: admin
     runtime-versions:
       nodejs: 12
     commands:
       - echo Install phase...
   pre_build:
+    run-as: admin
     commands:
       - echo Installing source NPM dependencies...
       - npm install
       - echo Compiling SASS...
       - npm run compile-sass
   build:
+    run-as: admin
     commands:
       - echo Build started on `date`
       - echo Compiling the Node.js code
       - ts-node .
   post_build:
+    run-as: admin
     commands:
       - echo Build completed on `date`
 # Include only the files required for your application to run.
