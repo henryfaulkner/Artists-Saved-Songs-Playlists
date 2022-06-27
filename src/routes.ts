@@ -85,6 +85,8 @@ router.get('/callback', function(req, res) {
         let access_token = body.access_token,
             refresh_token = body.refresh_token;
 
+        res.cookie("auth_token", access_token);
+
         process.env.access_token = access_token;
         process.env.refresh_token = refresh_token;
 
@@ -308,6 +310,7 @@ router.get("/run-process", async function(req, res) {
     }
   }
   console.log("Finished creating playlists!");
+  aggregatedTracksByArtistList = [];
   res.redirect("/");
 })
 
