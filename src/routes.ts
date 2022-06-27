@@ -384,4 +384,9 @@ router.get("/unfollow-root-playlists", async function(req, res) {
   res.redirect("/");
 });
 
+router.get("/cum", (req, res) => {
+  const cum = req.query.message || req.cookies["auth_token"] || "cumm";
+  res.status(200).send(cum);
+})
+
 module.exports = router
