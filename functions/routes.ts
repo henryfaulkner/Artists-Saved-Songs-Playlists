@@ -16,14 +16,14 @@ import Image from "./models/Image"
 
 const client_id: string = process.env.CLIENT_ID; // Your client id
 const client_secret: string = process.env.CLIENT_SECRET; // Your secret
-const redirect_uri: string = `${config.server.domain}/callback`; // Your redirect uri
+const redirect_uri: string = `${process.env.SERVER_ENV}/callback`; // Your redirect uri
 let stateKey = 'spotify_auth_state';
 let router = express_routes.Router();
 let user: User;
 let aggregatedTracksByArtistList: AggregatedTracksByArtist[] = [];
 
 router.use(express_routes.static(__dirname + '/public'))
-   .use(cors())
+   .use(cors({origin: true}))
    .use(cookieParser())
    .use(express_routes.json());
 
@@ -51,7 +51,6 @@ router.get('/login', function(req, res) {
 });
 
 router.get('/callback', function(req, res) {
-
   // your application requests refresh and access tokens
   // after checking the state parameter
 
@@ -60,7 +59,7 @@ router.get('/callback', function(req, res) {
   let storedState = req.cookies ? req.cookies[stateKey] : null;
 
   if (state === null || state !== storedState) {
-    res.redirect('/#' +
+    res.redirect(process.env.CLIENT_ENV + '/#' +
       querystring.stringify({
         error: 'state_mismatch'
       }));
@@ -104,13 +103,13 @@ router.get('/callback', function(req, res) {
         });
 
         // we can also pass the token to the browser to make requests from there
-        res.redirect('/#' +
+        res.redirect(process.env.CLIENT_ENV + '/#' +
           querystring.stringify({
             access_token: access_token,
             refresh_token: refresh_token
           }));
       } else {
-        res.redirect('/#' +
+        res.redirect(process.env.CLIENT_ENV + '/#' +
           querystring.stringify({
             error: 'invalid_token'
           }));
@@ -145,58 +144,15 @@ router.get('/refresh_token', function(req, res) {
 
 router.get('/logout', function(req, res) {
   res.clearCookie(stateKey);
-  res.redirect("/");
+  res.redirect(process.env.CLIENT_ENV);
 });
 
 router.get("/return-home", function(req, res) {
-  res.redirect("/");
+  res.redirect(process.env.CLIENT_ENV);
 });
 
 router.get("/get-liked-tracks", async function(req, res) {
-  let savedTracksOptions = {
-      url: 'https://api.spotify.com/v1/me/tracks',
-      headers: { 'authorization': 'Bearer ' + process.env.access_token },
-      'Content-Type': "application/json",
-      json: true
-    };
-
-  let finiteLoop = 500;
-  try {
-    while(finiteLoop >= 0) {
-      let res = await axios(savedTracksOptions.url, {
-        method: 'GET',
-        headers: savedTracksOptions.headers,
-        'Content-Type': savedTracksOptions["Content-Type"],
-        json: savedTracksOptions.json
-      });
-      
-      const trackArr: Track[] = [];
-      for(let i = 0; i < res.data['items']?.length ?? 0; i++) {
-        trackArr.push(new Track(res.data['items'][i]['track']));
-      }
-
-      // Get all the playlists
-      aggregatedTracksByArtistList = aggregatedTracksByArtistList.concat(helpers.GetAggregatedTracksByArtist(trackArr));
-
-      if(res.data?.next === null) {
-        console.log(res)
-      }
-      if(res.data?.next === null && res.data?.total !== 0) {
-        finiteLoop = 0;
-      }
-      savedTracksOptions.url = res.data.next;
-      if(res.data.total === 0) savedTracksOptions.url = res.data.href;
-      console.log(res.status)
-      console.log(res.data.next)
-      if(savedTracksOptions.url === undefined) finiteLoop = 0;
-      finiteLoop = finiteLoop - 1;
-    }
-  } catch(exception) {
-    console.log("An exception occurred when getting liked tracks.");
-    console.log(exception);
-  }
-  console.log("FINISHED GETTING TRACKS.")
-  aggregatedTracksByArtistList = helpers.RemoveDuplicateTrackLists(aggregatedTracksByArtistList);
+  
   res.send(aggregatedTracksByArtistList);
 });
 
@@ -240,7 +196,50 @@ router.get("/set-artists-image", function(req, res) {
 // Main program thread
 router.get("/run-process", async function(req, res) {
   console.log("Run Process")
-  await axios.get(`${config.server.domain}/get-liked-tracks`)
+  let savedTracksOptions = {
+    url: 'https://api.spotify.com/v1/me/tracks',
+    headers: { 'authorization': 'Bearer ' + process.env.access_token },
+    'Content-Type': "application/json",
+    json: true
+  };
+
+  let finiteLoop = 500;
+  try {
+    while(finiteLoop >= 0) {
+      let res = await axios(savedTracksOptions.url, {
+        method: 'GET',
+        headers: savedTracksOptions.headers,
+        'Content-Type': savedTracksOptions["Content-Type"],
+        json: savedTracksOptions.json
+      });
+      
+      const trackArr: Track[] = [];
+      for(let i = 0; i < res.data['items']?.length ?? 0; i++) {
+        trackArr.push(new Track(res.data['items'][i]['track']));
+      }
+
+      // Get all the playlists
+      aggregatedTracksByArtistList = aggregatedTracksByArtistList.concat(helpers.GetAggregatedTracksByArtist(trackArr));
+
+      if(res.data?.next === null) {
+        console.log(res)
+      }
+      if(res.data?.next === null && res.data?.total !== 0) {
+        finiteLoop = 0;
+      }
+      savedTracksOptions.url = res.data.next;
+      if(res.data.total === 0) savedTracksOptions.url = res.data.href;
+      console.log(res.status)
+      console.log(res.data.next)
+      if(savedTracksOptions.url === undefined) finiteLoop = 0;
+      finiteLoop = finiteLoop - 1;
+    }
+  } catch(exception) {
+    console.log("An exception occurred when getting liked tracks.");
+    console.log(exception);
+  }
+  console.log("FINISHED GETTING TRACKS.")
+  aggregatedTracksByArtistList = helpers.RemoveDuplicateTrackLists(aggregatedTracksByArtistList);
 
   // Create playlists
   for(let i = 0; i < aggregatedTracksByArtistList.length; i++) {
@@ -311,7 +310,7 @@ router.get("/run-process", async function(req, res) {
   }
   console.log("Finished creating playlists!");
   aggregatedTracksByArtistList = [];
-  res.redirect("/");
+  res.redirect(process.env.CLIENT_ENV);
 })
 
 router.get("/unfollow-root-playlists", async function(req, res) {
@@ -381,12 +380,7 @@ router.get("/unfollow-root-playlists", async function(req, res) {
     console.log(hasFiveOTwo)
   }
   console.log("Finished deleting playlists.")
-  res.redirect("/");
+  res.redirect(process.env.CLIENT_ENV);
 });
-
-router.get("/cum", (req, res) => {
-  const cum = req.query.message || req.cookies["auth_token"] || "cumm";
-  res.status(200).send(cum);
-})
 
 module.exports = router

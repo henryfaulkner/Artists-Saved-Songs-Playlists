@@ -14,12 +14,12 @@
       </div>
       <div id="content">
         <div id="login">
-          <a href="/login" class="btn btn-success btn-lg">Log in with Spotify</a>
+          <a href="" id="login-btn" class="btn btn-success btn-lg">Log in with Spotify</a>
         </div>
         <div id="loggedin">
-          <a href="/run-process" class="btn btn-success btn-lg">Create Artists' Saved Track Playlists</a>
-          <a href="/unfollow-root-playlists" class="btn btn-danger btn-lg">Remove Artists' Saved Track Playlists</a>
-          <a href="/logout" class="btn btn-danger btn-lg">Logout</a>
+          <a href="" id="run-process-btn" class="btn btn-success btn-lg">Create Artists' Saved Track Playlists</a>
+          <a href="" id="unfollow-root-playlists-btn" class="btn btn-danger btn-lg">Remove Artists' Saved Track Playlists</a>
+          <a href="" id="logout-btn" class="btn btn-danger btn-lg">Logout</a>
         </div>
         <div id="loggedinDeprcated" style="display: none;">
           <div id="user-profile">
@@ -61,9 +61,28 @@
     </script>
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/2.0.0-alpha.1/handlebars.min.js"></script>
-    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+    <script src="https://code.jquery.com/jquery-1.10.1.min.js"></script>
     <script>
       (function() {
+        if(window.location.href.includes("http://localhost:5000/")) {
+          serverBaseUrl = "http://localhost:5001/artists-saved-songs-playlists/us-east1/expressAPI/";
+          document.getElementById("login-btn").href = `${serverBaseUrl}login`;
+          document.getElementById("run-process-btn").href = `${serverBaseUrl}run-process`;
+          document.getElementById("unfollow-root-playlists-btn").href = `${serverBaseUrl}unfollow-root-playlists`;
+          document.getElementById("logout-btn").href = `${serverBaseUrl}logout`;
+        } else if(window.location.href.includes("http://localhost:8888/")) {
+          serverBaseUrl = "http://localhost:8888/";
+          document.getElementById("login-btn").href = `${serverBaseUrl}login`;
+          document.getElementById("run-process-btn").href = `${serverBaseUrl}run-process`;
+          document.getElementById("unfollow-root-playlists-btn").href = `${serverBaseUrl}unfollow-root-playlists`;
+          document.getElementById("logout-btn").href = `${serverBaseUrl}logout`;
+        } else {
+          serverBaseUrl = "https://us-east1-artists-saved-songs-playlists.cloudfunctions.net/expressAPI/";
+          document.getElementById("login-btn").href = `${serverBaseUrl}login`;
+          document.getElementById("run-process-btn").href = `${serverBaseUrl}run-process`;
+          document.getElementById("unfollow-root-playlists-btn").href = `${serverBaseUrl}unfollow-root-playlists`;
+          document.getElementById("logout-btn").href = `${serverBaseUrl}logout`;
+        }
 
         /**
          * Obtains parameters from the hash of the URL

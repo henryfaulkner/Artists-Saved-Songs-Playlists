@@ -3,13 +3,13 @@
   "name": "artists-saved-songs-playlists",
   "description": "This is app is meant to create a playlist that imitates Spotify's deprecated \"listen to saved songs by specific artist in the Your Library\" functionality.",
   "version": "0.0.1",
-  "main": "build/index.js",
+  "main": "build/server.js",
   "scripts": {
     "start": "npx functions-framework --source=build/server.js --target=expressAPI",
-    "local": "npm run compile-sass; npx nodemon src/server.ts",
+    "local": "npm run compile-sass; npx nodemon functions/server.ts",
     "build": "tsc --outDir build",
-    "watch-sass": "node-sass --watch ./src/public/styles/scss -o ./src/public/styles/css",
-    "compile-sass": "node-sass ./src/public/styles/scss -o ./src/public/styles/css"
+    "watch-sass": "node-sass --watch ./public/styles/scss -o ./public/styles/css",
+    "compile-sass": "node-sass ./public/styles/scss -o ./public/styles/css"
   },
   "dependencies": {
     "@types/express": "^4.17.13",
@@ -20,6 +20,7 @@
     "cors": "^2.8.4",
     "dotenv": "^16.0.1",
     "express": "~4.16.0",
+    "firebase-admin": "^11.0.0",
     "firebase-functions": "^3.21.2",
     "lodash.isequal": "^4.5.0",
     "node-sass": "^7.0.1",
