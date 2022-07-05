@@ -310,7 +310,7 @@ router.get("/run-process", async function(req, res) {
   }
   console.log("Finished creating playlists!");
   aggregatedTracksByArtistList = [];
-  res.redirect(process.env.CLIENT_ENV);
+  res.redirect(process.env.CLIENT_ENV + "/successfulCreate.html");
 })
 
 router.get("/unfollow-root-playlists", async function(req, res) {
@@ -380,7 +380,7 @@ router.get("/unfollow-root-playlists", async function(req, res) {
     console.log(hasFiveOTwo)
   }
   console.log("Finished deleting playlists.")
-  res.redirect(process.env.CLIENT_ENV);
+  res.redirect(process.env.CLIENT_ENV + "/successfulUnfollow.html");
 });
 
 module.exports = router

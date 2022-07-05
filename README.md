@@ -20,3 +20,7 @@ This Node.js app creates playlists which imitate Spotify's deprecated "listen to
 - Start server in one terminal
 - Use 'npm run watch-sass' for continuous CSS compilation in another terminal
   or 'npm run compile-sass' for immediate compilation.
+
+## Deployment
+
+- Deploy to Firebase with 'firebase deploy'

@@ -9,7 +9,7 @@
     "local": "npm run compile-sass; npx nodemon functions/server.ts",
     "build": "tsc --outDir build",
     "watch-sass": "node-sass --watch ./public/styles/scss -o ./public/styles/css",
-    "compile-sass": "node-sass ./public/styles/scss -o ./public/styles/css"
+    "compile-sass": "node-sass ../public/styles/scss -o ../public/styles/css"
   },
   "dependencies": {
     "@types/express": "^4.17.13",
