@@ -9,7 +9,7 @@ body {
     height: 100%;
 }
 
-@import "../../../../node_modules/bootstrap/scss/bootstrap.scss";
+@import "../../../functions/node_modules/bootstrap/scss/bootstrap.scss";
 
 .navBar {
   width: 100%;
@@ -52,12 +52,28 @@ body {
   margin-left: 30px;
 }
 
-#content>#login, #content>#loggedin {
+#content>#login, #content>#loggedin, #content>#signup {
   height: inherit;
   display: flex;
   flex-direction: column;
   padding-top: 100px;
   align-items: center;
+}
+
+#signup {
+  max-width: 50%;
+  margin-left: 25%;
+  height: 75%;
+
+  display: flex;
+  flex-direction: column;
+  padding-top: 100px;
+  align-items: center;
+}
+
+.input-group-text {
+  height: 100%;
+  color: black;
 }
 
 a {

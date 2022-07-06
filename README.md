@@ -1,6 +1,8 @@
 # Artists-Saved-Songs-Playlists
 
-This Node.js app is meant to create playlists which imitate Spotify's deprecated "listen to saved songs by specific artist in Your Library" functionality.
+This Node.js app creates playlists which imitate Spotify's deprecated "listen to saved songs by specific artist in Your Library" functionality.
+
+# Hosted at https://artists-saved-songs-playlists.web.app/
 
 ## Spotify Authorization Scopes used
 
@@ -18,3 +20,7 @@ This Node.js app is meant to create playlists which imitate Spotify's deprecated
 - Start server in one terminal
 - Use 'npm run watch-sass' for continuous CSS compilation in another terminal
   or 'npm run compile-sass' for immediate compilation.
+
+## Deployment
+
+- Deploy to Firebase with 'firebase deploy'
