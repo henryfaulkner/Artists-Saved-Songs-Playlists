@@ -6,9 +6,10 @@ import {
   getDownloadURL,
 } from 'firebase/storage';
 import { getAnalytics, isSupported } from "firebase/analytics";
+require('dotenv').config();
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDjRiBluUP2iR8lvSCYMZp_y45Scl9PwVw",
+  apiKey: process.env.API_KEY,
   authDomain: "artists-saved-songs-playlists.firebaseapp.com",
   projectId: "artists-saved-songs-playlists",
   storageBucket: "artists-saved-songs-playlists.appspot.com",
