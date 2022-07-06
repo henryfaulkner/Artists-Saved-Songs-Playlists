@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Artists' Saved Songs</title>
+    <link rel="icon" href="./assets/icons/Spotify_Icon_RGB_Green.png">
+    <link href="./styles/css/styles.css" rel="stylesheet" type="text/css"/>
+  </head>
+
+  <body>
+    <div class="container myContainer">
+        <div class="navBar">
+          <h1>Artists Saved Songs Playlists</h1>
+          <img src="./assets/logos/Spotify_Logo_RGB_White.png" id="navBarLogo"/>
+        </div>
+        <div id="signup">
+            <div id="emailGroup" class="input-group input-group-lg">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="emailDesc">Email</span>
+                </div>
+                <input type="text" class="form-control" aria-label="New user's email" aria-describedby="emailDesc">
+            </div>
+
+            <div id="passwordGroup" class="input-group input-group-lg">
+                <div class="input-group-prepend" style="display: flex;">
+                    <span class="input-group-text" id="passwordDesc">Password</span>
+                    <span class="input-group-text" id="toggleVisibility">
+                        <svg
+                            onclick="closeEye()"
+                            style="display: none;"
+                            id="openEye"
+                            xmlns="http://www.w3.org/2000/svg"
+                            x="0px"
+                            y="0px"
+                            width="24px"
+                            height="24px"
+                            viewBox="0 0 60.254 60.254"
+                            xmlSpace="preserve"
+                            >
+                            <path fill="#000" d="M29.008 48.308C12.532 48.308.672 31.279.175 30.554a1 1 0 01.039-1.184c.561-.712 13.906-17.424 29.913-17.424 17.953 0 29.474 16.769 29.956 17.482a1 1 0 01-.007 1.129c-.475.688-11.842 16.818-29.899 17.721a24.1 24.1 0 01-1.169.03zM2.267 30.028c2.326 3.098 13.553 16.967 27.812 16.254 15.237-.76 25.762-13.453 27.938-16.3-2.175-2.912-12.811-16.035-27.889-16.035-13.428 0-25.357 13.137-27.861 16.081z" />
+                            <path fill="#000" d="M30.127 37.114c-3.852 0-6.986-3.135-6.986-6.986s3.134-6.985 6.986-6.985 6.986 3.135 6.986 6.985c0 3.851-3.134 6.986-6.986 6.986z" />
+                            <path fill="#000" d="M30.127 42.614c-6.885 0-12.486-5.602-12.486-12.486 0-6.883 5.602-12.485 12.486-12.485s12.486 5.602 12.486 12.485c0 6.884-5.6 12.486-12.486 12.486zm0-22.973c-5.782 0-10.486 4.704-10.486 10.486 0 5.781 4.704 10.485 10.486 10.485s10.486-4.704 10.486-10.485c0-5.782-4.703-10.486-10.486-10.486z" />
+                        </svg>
+                        <svg
+                            onclick="openEye()"
+                            id="closedEye"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="24px"
+                            height="24px"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            >
+                            <path
+                                fillRule="evenodd"
+                                clipRule="evenodd"
+                                d="M20.53 4.53a.75.75 0 00-1.06-1.06l-16 16a.75.75 0 101.06 1.06l2.847-2.847c1.367.644 2.94 1.067 4.623 1.067 2.684 0 5.09-1.077 6.82-2.405.867-.665 1.583-1.407 2.089-2.136.492-.709.841-1.486.841-2.209 0-.723-.35-1.5-.841-2.209-.506-.729-1.222-1.47-2.088-2.136-.263-.201-.54-.397-.832-.583L20.53 4.53zM16.9 8.161l-1.771 1.771a3.75 3.75 0 01-5.197 5.197l-1.417 1.416A9.25 9.25 0 0012 17.25c2.287 0 4.38-.923 5.907-2.095.762-.585 1.364-1.218 1.77-1.801.419-.604.573-1.077.573-1.354 0-.277-.154-.75-.573-1.354-.406-.583-1.008-1.216-1.77-1.801-.313-.24-.65-.47-1.008-.684zm-5.87 5.87a2.25 2.25 0 003-3l-3 3z"
+                                fill="#000"
+                            />
+                            <path
+                                d="M12 5.25c1.032 0 2.024.16 2.951.431a.243.243 0 01.1.407l-.824.825a.254.254 0 01-.237.067A8.872 8.872 0 0012 6.75c-2.287 0-4.38.923-5.907 2.095-.762.585-1.364 1.218-1.77 1.801-.419.604-.573 1.077-.573 1.354 0 .277.154.75.573 1.354.354.51.858 1.057 1.488 1.577.116.095.127.27.02.377l-.708.709a.246.246 0 01-.333.016 9.52 9.52 0 01-1.699-1.824C2.6 13.5 2.25 12.723 2.25 12c0-.723.35-1.5.841-2.209.506-.729 1.222-1.47 2.088-2.136C6.91 6.327 9.316 5.25 12 5.25z"
+                                fill="#000"
+                            />
+                            <path
+                                d="M12 8.25c.118 0 .236.005.351.016.197.019.268.254.129.394l-1.213 1.212a2.256 2.256 0 00-1.395 1.395L8.66 12.48c-.14.14-.375.068-.394-.129A3.75 3.75 0 0112 8.25z"
+                                fill="#000"
+                            />
+                        </svg>
+                    </span>
+                </div>
+                <input id="password" type="password" class="form-control" aria-label="New user's password" aria-describedby="passwordDesc">
+            </div>
+
+            <div id="content">
+                <div id="login">
+                    <a href="" id="subscribe" class="btn btn-success btn-lg" style="width: inherit;">Signup</a>
+                </div>
+            </div>
+        </div>
+    </div>  
+
+    <script>
+        function openEye() {
+            document.getElementById("openEye").style.display = "block";
+            document.getElementById("closedEye").style.display = "none";
+            document.getElementById("password").type = "text";
+        }
+
+        function closeEye() {
+            document.getElementById("openEye").style.display = "none";
+            document.getElementById("closedEye").style.display = "block";
+            document.getElementById("password").type = "password";
+        }
+
+        if(window.location.href.includes("http://localhost:5000/")) {
+            serverBaseUrl = "http://localhost:5001/artists-saved-songs-playlists/us-east1/expressAPI/";
+            console.log(`${serverBaseUrl}subscribe`)
+            document.getElementById("subscribe").href = `${serverBaseUrl}subscribe`;
+        } else if(window.location.href.includes("http://localhost:8888/")) {
+            serverBaseUrl = "http://localhost:8888/";
+            document.getElementById("subscribe").href = `${serverBaseUrl}subscribe`;
+        } else {
+            serverBaseUrl = "https://us-east1-artists-saved-songs-playlists.cloudfunctions.net/expressAPI/";
+            console.log(`${serverBaseUrl}subscribe`)
+            document.getElementById("subscribe").href = `${serverBaseUrl}subscribe`;
+        }
+    </script>
+  </body>
+</html>

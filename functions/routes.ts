@@ -6,7 +6,14 @@ let querystring = require('querystring');
 let cookieParser = require('cookie-parser');
 require('dotenv').config();
 let helpers = require("./helpers");
-import { config } from "./config/config"
+import {
+  Firestore,
+  collection,
+  addDoc,
+} from "firebase/firestore";
+import { firestore } from "./lib/firebase";
+import * as CollectionConstants from "./lib/CollectionConstants";
+import FirestoreUser from "./lib/FirestoreUser";
 
 import AggregatedTracksByArtist from "./models/AggregatedTracksByArtist";
 import Playlist from "./models/Playlist";
@@ -21,6 +28,7 @@ let stateKey = 'spotify_auth_state';
 let router = express_routes.Router();
 let user: User;
 let aggregatedTracksByArtistList: AggregatedTracksByArtist[] = [];
+let refresh_token: string;
 
 router.use(express_routes.static(__dirname + '/public'))
    .use(cors({origin: true}))
@@ -121,7 +129,7 @@ router.get('/callback', function(req, res) {
 router.get('/refresh_token', function(req, res) {
 
   // requesting access token from refresh token
-  let refresh_token = req.query.refresh_token;
+  refresh_token = req.query.refresh_token;
   let authOptions = {
     url: 'https://accounts.spotify.com/api/token',
     headers: { 'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64')) },
@@ -314,6 +322,7 @@ router.get("/run-process", async function(req, res) {
 })
 
 router.get("/unfollow-root-playlists", async function(req, res) {
+  console.log("goodbye");
   let hasFiveOTwo: boolean = true;
   while(hasFiveOTwo) {
     hasFiveOTwo = false;
@@ -381,6 +390,34 @@ router.get("/unfollow-root-playlists", async function(req, res) {
   }
   console.log("Finished deleting playlists.")
   res.redirect(process.env.CLIENT_ENV + "/successfulUnfollow.html");
+});
+
+router.get('/subscribe', async function(req, res) {
+  console.log("hello");
+  try {
+    const userObj = new FirestoreUser({
+      name: "Henry Faulkner",
+      refresh_token: "Placeholder token"
+    });
+    addDoc(
+      collection(firestore, CollectionConstants.Users),
+      JSON.parse(JSON.stringify(userObj))
+    ).then((res) => {
+      userObj.SetDocumentID = res.id;
+      console.log("userObj")
+      console.log(userObj)
+    });
+    
+    console.log("Successfully created user");
+    res.status(200).json({ statusMessage: "Successfully call." });
+    res.redirect(process.env.CLIENT_ENV);
+  } catch (exception) {
+    console.log("Something went wrong.");
+
+    res.status(500).json({ statusMessage: "Error on call." });
+  }
+
+
 });
 
 module.exports = router
