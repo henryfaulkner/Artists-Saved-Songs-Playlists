@@ -11,9 +11,15 @@ import {
   collection,
   addDoc,
 } from "firebase/firestore";
-import { firestore } from "./lib/firebase";
+import { firestore, auth } from "./lib/firebase";
 import * as CollectionConstants from "./lib/CollectionConstants";
 import FirestoreUser from "./lib/FirestoreUser";
+import {
+  signInWithEmailAndPassword,
+  signOut,
+  createUserWithEmailAndPassword,
+  UserCredential,
+} from "firebase/auth";
 
 import AggregatedTracksByArtist from "./models/AggregatedTracksByArtist";
 import Playlist from "./models/Playlist";
@@ -28,12 +34,11 @@ let stateKey = 'spotify_auth_state';
 let router = express_routes.Router();
 let user: User;
 let aggregatedTracksByArtistList: AggregatedTracksByArtist[] = [];
-let refresh_token: string;
 
 router.use(express_routes.static(__dirname + '/public'))
-   .use(cors({origin: true}))
-   .use(cookieParser())
-   .use(express_routes.json());
+  .use(cors({origin: true}))
+  .use(cookieParser())
+  .use(express_routes.json())
 
 router.get('/success', (req, res) => {
   res.send({
@@ -127,9 +132,8 @@ router.get('/callback', function(req, res) {
 });
 
 router.get('/refresh_token', function(req, res) {
-
   // requesting access token from refresh token
-  refresh_token = req.query.refresh_token;
+  const refresh_token = req.query.refresh_token;
   let authOptions = {
     url: 'https://accounts.spotify.com/api/token',
     headers: { 'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64')) },
@@ -392,32 +396,34 @@ router.get("/unfollow-root-playlists", async function(req, res) {
   res.redirect(process.env.CLIENT_ENV + "/successfulUnfollow.html");
 });
 
-router.get('/subscribe', async function(req, res) {
-  console.log("hello");
+router.post('/subscribe', async function(req, res) {
+  const name: string = req.body.name;
+  const email: string = req.body.email;
+  const password: string = req.body.password;
+  
   try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const userObj = new FirestoreUser({
-      name: "Henry Faulkner",
-      refresh_token: "Placeholder token"
+      name: name,
+      refresh_token: process.env.refresh_token,
+      UserID: userCredential.user.uid
     });
+    console.log("process.env.refresh_token")
+    console.log(process.env.refresh_token)
+    console.log("userObj")
+    console.log(userObj)
     addDoc(
       collection(firestore, CollectionConstants.Users),
       JSON.parse(JSON.stringify(userObj))
     ).then((res) => {
       userObj.SetDocumentID = res.id;
-      console.log("userObj")
-      console.log(userObj)
     });
     
     console.log("Successfully created user");
-    res.status(200).json({ statusMessage: "Successfully call." });
     res.redirect(process.env.CLIENT_ENV);
   } catch (exception) {
     console.log("Something went wrong.");
-
-    res.status(500).json({ statusMessage: "Error on call." });
   }
-
-
 });
 
 module.exports = router

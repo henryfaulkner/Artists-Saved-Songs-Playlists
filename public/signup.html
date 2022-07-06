@@ -13,11 +13,18 @@
           <img src="./assets/logos/Spotify_Logo_RGB_White.png" id="navBarLogo"/>
         </div>
         <div id="signup">
+            <div id="nameGroup" class="input-group input-group-lg">
+                <div class="input-group-prepend">
+                    <span class="input-group-text" id="nameDesc">Your name</span>
+                </div>
+                <input id="name" type="text" class="form-control" aria-label="New user's name" aria-describedby="nameDesc">
+            </div>
+
             <div id="emailGroup" class="input-group input-group-lg">
                 <div class="input-group-prepend">
                     <span class="input-group-text" id="emailDesc">Email</span>
                 </div>
-                <input type="text" class="form-control" aria-label="New user's email" aria-describedby="emailDesc">
+                <input id="email" type="text" class="form-control" aria-label="New user's email" aria-describedby="emailDesc">
             </div>
 
             <div id="passwordGroup" class="input-group input-group-lg">
@@ -70,8 +77,8 @@
             </div>
 
             <div id="content">
-                <div id="login">
-                    <a href="" id="subscribe" class="btn btn-success btn-lg" style="width: inherit;">Signup</a>
+                <div id="login" >
+                    <button type="button" onclick="subscribe(); console.log('brrrr');" href="" id="subscribe" class="btn btn-success btn-lg" style="width: inherit;">Signup</button>
                 </div>
             </div>
         </div>
@@ -88,6 +95,22 @@
             document.getElementById("openEye").style.display = "none";
             document.getElementById("closedEye").style.display = "block";
             document.getElementById("password").type = "password";
+        }
+
+        function subscribe() {
+            const request = {
+                name: document.getElementById("name").value,
+                email: document.getElementById("email").value,
+                password: document.getElementById("password").value
+            }
+            console.log(request.name)
+            fetch(document.getElementById("subscribe").href, {
+                method: "POST",
+                body: JSON.stringify(request),
+                headers: {
+                    "Content-type": "application/json; charset=UTF-8",
+                },
+            });
         }
 
         if(window.location.href.includes("http://localhost:5000/")) {
