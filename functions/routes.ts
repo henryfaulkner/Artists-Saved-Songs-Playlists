@@ -32,7 +32,6 @@ const client_secret: string = process.env.CLIENT_SECRET; // Your secret
 const redirect_uri: string = `${process.env.SERVER_ENV}/callback`; // Your redirect uri
 let stateKey = 'spotify_auth_state';
 let router = express_routes.Router();
-let user: User;
 let aggregatedTracksByArtistList: AggregatedTracksByArtist[] = [];
 
 router.use(express_routes.static(__dirname + '/public'))
@@ -63,7 +62,7 @@ router.get('/login', function(req, res) {
     }));
 });
 
-router.get('/callback', function(req, res) {
+router.get('/callback', async function(req, res) {
   // your application requests refresh and access tokens
   // after checking the state parameter
 
@@ -78,56 +77,77 @@ router.get('/callback', function(req, res) {
       }));
   } else {
     res.clearCookie(stateKey);
-    let authOptions = {
-      url: 'https://accounts.spotify.com/api/token',
-      form: {
-        code: code,
-        redirect_uri: redirect_uri,
-        grant_type: 'authorization_code'
-      },
+    // let authOptions = {
+    //   form: {
+    //     code: code,
+    //     redirect_uri: redirect_uri,
+    //     grant_type: 'authorization_code'
+    //   },
+    //   headers: {
+    //     "Content-Type": "multipart/form-data",
+    //     'Accept' : 'application/json',
+    //     'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
+    //   },
+    //   json: true
+    // };
+    const headers = {
       headers: {
-        'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
+        Accept: 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      json: true
+      auth: {
+        username: process.env.CLIENT_ID,
+        password: process.env.CLIENT_SECRET,
+      },
+    };
+    const data = {
+      //grant_type: 'client_credentials',
+      code: code,
+      redirect_uri: redirect_uri,
+      grant_type: 'authorization_code'
     };
 
-    request.post(authOptions, function(error, response, body) {
-      if (!error && response.statusCode === 200) {
+    const response = await axios.post('https://accounts.spotify.com/api/token', 
+      querystring.stringify(data),
+      headers)
+      .catch(error => {
+        console.log("Could not get tokens")
+      });
+  
+    if (response.status === 200) {
+      let access_token = response.data.access_token,
+          refresh_token = response.data.refresh_token;
+      console.log("response.data.access_token")
+      console.log(response.data.access_token)
+      let headers = {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + access_token
+      };
 
-        let access_token = body.access_token,
-            refresh_token = body.refresh_token;
+      //use the access token to access the Spotify Web API
+      const userRes = await axios.get('https://api.spotify.com/v1/me', { headers })
+      .catch(error => {
+        console.log("Could not get user profile.")
+      });
+      console.log("userRes.data")
+      console.log(userRes.data)
 
-        res.cookie("auth_token", access_token);
+      let user = userRes.data;
 
-        process.env.access_token = access_token;
-        process.env.refresh_token = refresh_token;
-
-        let options = {
-          url: 'https://api.spotify.com/v1/me',
-          headers: { 'Authorization': 'Bearer ' + access_token },
-          json: true
-        };
-
-        // use the access token to access the Spotify Web API
-        request.get(options, function(error, response, body) {
-          user = body;
-          console.log(body);
-          console.log(access_token)
-        });
-
-        // we can also pass the token to the browser to make requests from there
-        res.redirect(process.env.CLIENT_ENV + '/#' +
-          querystring.stringify({
-            access_token: access_token,
-            refresh_token: refresh_token
-          }));
-      } else {
-        res.redirect(process.env.CLIENT_ENV + '/#' +
-          querystring.stringify({
-            error: 'invalid_token'
-          }));
-      }
-    });
+      // we can also pass the token to the browser to make requests from there
+      res.redirect(process.env.CLIENT_ENV + '/#' +
+        querystring.stringify({
+          access_token: access_token,
+          refresh_token: refresh_token,
+          spotify_user_id: user.id
+        }));
+    } else {
+      res.redirect(process.env.CLIENT_ENV + '/#' +
+        querystring.stringify({
+          error: 'invalid_token'
+        }));
+    }
   }
 });
 
@@ -210,7 +230,7 @@ router.get("/run-process", async function(req, res) {
   console.log("Run Process")
   let savedTracksOptions = {
     url: 'https://api.spotify.com/v1/me/tracks',
-    headers: { 'authorization': 'Bearer ' + process.env.access_token },
+    headers: { 'authorization': 'Bearer ' + req.query.access_token },
     'Content-Type': "application/json",
     json: true
   };
@@ -259,7 +279,7 @@ router.get("/run-process", async function(req, res) {
     for(let h = 0; h < 5; h++) {
       if(h > 0) console.log("Playlist creation retry. " + h)
       try {
-        await axios(`https://api.spotify.com/v1/users/${user.id}/playlists`, {
+        await axios(`https://api.spotify.com/v1/users/${req.query.spotify_user_id}/playlists`, {
           method: 'POST',
           data: {
             name: `z${aggregatedTracksByArtistList[i].Artist.name} - $saved`,
@@ -270,7 +290,7 @@ router.get("/run-process", async function(req, res) {
           headers: { 
             "Content-Type": "application/json",
             'Accept' : 'application/json',
-            'authorization': 'Bearer ' + process.env.access_token 
+            'authorization': 'Bearer ' + req.query.access_token 
           },
           json: true
         }).then((res) => {
@@ -298,7 +318,7 @@ router.get("/run-process", async function(req, res) {
       },
       headers: { 
         'Content-Type': "application/json",
-        'authorization': 'Bearer ' + process.env.access_token 
+        'authorization': 'Bearer ' + req.query.access_token 
       },
       json: true
     }
@@ -322,7 +342,7 @@ router.get("/run-process", async function(req, res) {
   }
   console.log("Finished creating playlists!");
   aggregatedTracksByArtistList = [];
-  res.redirect(process.env.CLIENT_ENV + "/successfulCreate.html");
+  res.redirect(`${process.env.CLIENT_ENV}/successfulCreate.html#access_token=${req.query.access_token}&refresh_token=${req.query.refresh_token}&spotify_user_id=${req.query.spotify_user_id}`);
 })
 
 router.get("/unfollow-root-playlists", async function(req, res) {
@@ -331,8 +351,8 @@ router.get("/unfollow-root-playlists", async function(req, res) {
   while(hasFiveOTwo) {
     hasFiveOTwo = false;
     let getPlaylistsOptions = {
-      url: `https://api.spotify.com/v1/users/${user.id}/playlists`,
-      headers: { 'authorization': 'Bearer ' + process.env.access_token },
+      url: `https://api.spotify.com/v1/users/${req.query.spotify_user_id}/playlists`,
+      headers: { 'authorization': 'Bearer ' + req.query.access_token },
       'Content-Type': "application/json",
       json: true
     };
@@ -353,7 +373,7 @@ router.get("/unfollow-root-playlists", async function(req, res) {
               if(response.data["items"][i]["name"].includes("- $saved")) {
                 const deletePlaylistOptions = {
                   url: `https://api.spotify.com/v1/playlists/${response.data["items"][i]["id"]}/followers`,
-                  headers: { 'authorization': 'Bearer ' + process.env.access_token },
+                  headers: { 'authorization': 'Bearer ' + req.query.access_token },
                   method: "DELETE",
                   'Content-Type': "application/json",
                   json: true
@@ -393,23 +413,23 @@ router.get("/unfollow-root-playlists", async function(req, res) {
     console.log(hasFiveOTwo)
   }
   console.log("Finished deleting playlists.")
-  res.redirect(process.env.CLIENT_ENV + "/successfulUnfollow.html");
+  res.redirect(`${process.env.CLIENT_ENV}/successfulUnfollow.html#access_token=${req.query.access_token}&spotify_user_id=${req.query.spotify_user_id}`);
 });
 
 router.post('/subscribe', async function(req, res) {
   const name: string = req.body.name;
   const email: string = req.body.email;
   const password: string = req.body.password;
-  
+
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
     const userObj = new FirestoreUser({
       name: name,
-      refresh_token: process.env.refresh_token,
-      UserID: userCredential.user.uid
+      refresh_token: req.body.refresh_token,
+      AuthID: userCredential.user.uid,
+      SpotifyUserID: req.body.spotify_user_id
     });
-    console.log("process.env.refresh_token")
-    console.log(process.env.refresh_token)
     console.log("userObj")
     console.log(userObj)
     addDoc(
@@ -425,5 +445,21 @@ router.post('/subscribe', async function(req, res) {
     console.log("Something went wrong.");
   }
 });
+
+// call individually for every subscribed user
+// can't do all users in one call because of timeout
+// Scheduled Job url:
+// https://console.cloud.google.com/cloudscheduler?project=artists-saved-songs-playlists
+router.get('/update-subscribers', function(req, res) {
+  // Get all documents from Users collection
+  
+  // Async refresh access token
+
+  // Sync call to /UpdateSavedSongsPlaylists/update-users-playlists
+  // , querystring({
+  //    access_token: access_token,
+  //    spotify_user_id: userDoc.SpotifyUserID
+  // }) 
+})
 
 module.exports = router

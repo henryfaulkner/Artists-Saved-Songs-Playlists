@@ -2,13 +2,15 @@ import IFirebaseDocument from "./IFirebaseDocument";
 
 class FirestoreUser implements IFirebaseDocument {
   public DocumentID: string;
-  public UserID: string;
+  public AuthID: string;
+  public SpotifyUserID: string;
   public name: string;
   public refresh_token: string;
 
   public constructor(json) {
     if (json["DocumentID"]) this.DocumentID = json["DocumentID"];
-    if (json["UserID"]) this.UserID = json["UserID"];
+    if (json["AuthID"]) this.AuthID = json["AuthID"];
+    if (json["SpotifyUserID"]) this.SpotifyUserID = json["SpotifyUserID"];
     if (json["name"]) this.name = json["name"];
     if (json["refresh_token"]) this.refresh_token = json["refresh_token"];
   }
