@@ -188,43 +188,6 @@ router.get("/get-liked-tracks", async function(req, res) {
   res.send(aggregatedTracksByArtistList);
 });
 
-router.get("/set-artist-image", function(req, res) {
-  let artistOptions = {
-    url: `${req["artist_href"]}`, //https://api.spotify.com/v1/artists/{id}
-    headers: { 'authorization': 'Bearer ' + process.env.access_token },
-    'Content-Type': "application/json",
-    json: true
-  };
-
-  request(artistOptions, (error, response, body) => {
-    if(error) console.log(error);
-    console.log(response.statusCode);
-      
-    res = body["images"];
-  });
-});
-
-// TODO: Use Add Custom Playlist Cover Image 
-router.get("/set-artists-image", function(req, res) {
-  for(let i = 0; i < aggregatedTracksByArtistList.length; i++){
-    let artistOptions = {
-      url: `${aggregatedTracksByArtistList[i].Artist.href}`, //https://api.spotify.com/v1/artists/{id}
-      headers: { 'authorization': 'Bearer ' + process.env.access_token },
-      'Content-Type': "application/json",
-      json: true
-    };
-
-    request(artistOptions, (error, response, body) => {
-      if(error) console.log(error);
-      if(response) console.log(response.statusCode);
-        
-      if(body === undefined || body["images"] === undefined) aggregatedTracksByArtistList[i].Artist.Image = new Image({});
-      else aggregatedTracksByArtistList[i].Artist.Image = body["images"][0];
-    });
-  }
-  res.redirect('/');
-})
-
 // Main program thread
 router.get("/run-process", async function(req, res) {
   console.log("Run Process")
