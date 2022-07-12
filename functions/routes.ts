@@ -339,8 +339,14 @@ router.get("/unfollow-root-playlists", async function(req, res) {
         playlistArr.push(res.data['items'][i]);
       }
       // Keep only playlists I made
-      playlistArr = playlistArr.filter(playlist => playlist.name.includes("- $saved"));
-      if(playlistArr.length) hasFiveOTwo = true;
+      // async playlistArr.filter
+      // and it lets us break early
+      for(let i = 0; i < playlistArr.length; i++) {
+        if(playlistArr[i].name.includes("- $saved")) {
+          hasFiveOTwo = true;
+          break;
+        }
+      }
     }
     if(hasFiveOTwo) console.log("Looping through all playlists again.")
     console.log(hasFiveOTwo)
