@@ -12,7 +12,7 @@
         <div class="modal" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
-                    <div class="modal-header">
+                    <div class="modal-header" style="justify-content: center;">
                         <h3 class="modal-title" id="staticBackdropLabel" style="color: white;">
                             Please wait for the process to finish.
                         </h3>
@@ -27,14 +27,14 @@
         </div>
 
         <div class="navBar">
-            <h1>Artists Saved Songs Playlists</h1>
+            <h1><a href="/" class="titleLink">Artists Saved Songs Playlists</a></h1>
             <img src="./assets/logos/Spotify_Logo_RGB_White.png" id="navBarLogo"/>
         </div>
         <div id="content">
             <div id="loggedin">
-            <a href="" onclick="showModal()" id="run-process-btn" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#staticBackdrop">Create Artists' Saved Track Playlists</a>
-            <a href="" onclick="showModal()" id="unfollow-root-playlists-btn" class="btn btn-danger btn-lg" data-bs-toggle="modal" data-bs-target="#staticBackdrop">Remove Artists' Saved Track Playlists</a>
-            <a href="" id="logout-btn" class="btn btn-danger btn-lg">Logout</a>
+                <a href="" onclick="showModal()" id="run-process-btn" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#staticBackdrop">Create Artists' Saved Track Playlists</a>
+                <a href="" onclick="showModal()" id="unfollow-root-playlists-btn" class="btn btn-danger btn-lg" data-bs-toggle="modal" data-bs-target="#staticBackdrop">Remove Artists' Saved Track Playlists</a>
+                <a href="" id="logout-btn" class="btn btn-danger btn-lg">Logout</a>
             </div>
         </div>
     </div>
