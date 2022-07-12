@@ -16,7 +16,7 @@
           <h1>The playlist creation process has finished! Please refer to your 
               Spotify account to see your new playlists.</h1>
           <a href="" id="signup-btn" class="btn btn-success btn-lg">Subscribe!</a>
-          <a href="/" class="btn btn-success btn-lg">Return to the main page</a>
+          <a href="" id="return-btn" class="btn btn-success btn-lg">Return to the main page</a>
       </div>
     </div>
 
@@ -24,6 +24,7 @@
       const queryParams = getHashParams();
       // PLEASE CHANGE TO fetches onclick
       document.getElementById("signup-btn").href = `/signup.html#access_token=${queryParams["access_token"]}&refresh_token=${queryParams["refresh_token"]}&spotify_user_id=${queryParams["spotify_user_id"]}`;
+      document.getElementById("return-btn").href = `/main.html#access_token=${queryParams["access_token"]}&refresh_token=${queryParams["refresh_token"]}&spotify_user_id=${queryParams["spotify_user_id"]}`;
 
       /**
        * Obtains parameters from the hash of the URL

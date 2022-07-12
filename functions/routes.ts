@@ -43,7 +43,6 @@ router.get('/success', (req, res) => {
 })
 
 router.get('/login', function(req, res) {
-
   let state = helpers.GenerateRandomString(16);
   res.cookie(stateKey, state);
 
@@ -74,24 +73,22 @@ router.get('/callback', async function(req, res) {
       }));
   } else {
     res.clearCookie(stateKey);
-    const data = {
-      //grant_type: 'client_credentials',
-      code: code,
-      redirect_uri: redirect_uri,
-      grant_type: 'authorization_code'
-    };
-    const headers = {
-      method: "POST",
-      headers: {
-        Accept: 'application/json',
-        'Authorization': 'Basic ' + (new Buffer(process.env.CLIENT_ID + ':' + process.env.CLIENT_SECRET).toString('base64')),
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      params: data,
-    };
 
     const response = await axios('https://accounts.spotify.com/api/token',
-      headers)
+      {
+        method: "POST",
+        headers: {
+          Accept: 'application/json',
+          'Authorization': 'Basic ' + (new Buffer(process.env.CLIENT_ID + ':' + process.env.CLIENT_SECRET).toString('base64')),
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        params: {
+          //grant_type: 'client_credentials',
+          code: code,
+          redirect_uri: redirect_uri,
+          grant_type: 'authorization_code'
+        },
+      })
       .catch(error => {
         console.log("Could not get tokens")
       });
@@ -99,8 +96,6 @@ router.get('/callback', async function(req, res) {
     if (response.status === 200) {
       let access_token = response.data.access_token;
       let refresh_token = response.data.refresh_token;
-      console.log("access_token")
-      console.log(access_token)
 
       //use the access token to access the Spotify Web API
       const userRes = await axios('https://api.spotify.com/v1/me', {
@@ -112,13 +107,12 @@ router.get('/callback', async function(req, res) {
       })
       .catch(error => {
         console.log("Could not get user profile.")
-        console.log(error)
       });
 
       let user = userRes.data;
 
       // we can also pass the token to the browser to make requests from there
-      res.redirect(process.env.CLIENT_ENV + '/#' +
+      res.redirect(process.env.CLIENT_ENV + '/main.html#' +
         querystring.stringify({
           access_token: access_token,
           refresh_token: refresh_token,
@@ -352,7 +346,7 @@ router.get("/unfollow-root-playlists", async function(req, res) {
     console.log(hasFiveOTwo)
   }
   console.log("Finished deleting playlists.")
-  res.redirect(`${process.env.CLIENT_ENV}/successfulUnfollow.html#access_token=${req.query.access_token}&spotify_user_id=${req.query.spotify_user_id}`);
+  res.redirect(`${process.env.CLIENT_ENV}/successfulUnfollow.html#access_token=${req.query.access_token}&refresh_token=${req.query.refresh_token}&spotify_user_id=${req.query.spotify_user_id}`);
 });
 
 router.post('/subscribe', async function(req, res) {
