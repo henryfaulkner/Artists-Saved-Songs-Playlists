@@ -1,10 +1,11 @@
 const functions = require("firebase-functions");
 const express = require('express');
 const app = express(express.json());
+const jobApp = express(express.json());
 import { config } from "./config/config"
-import jobApp from "./scheduled_job";
 
 app.use(require("./routes"))
+jobApp.use(require("./scheduled_job"))
 
 console.log(`Listening on port ${config.server.port}`)
 

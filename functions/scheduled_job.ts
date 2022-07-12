@@ -6,8 +6,8 @@ let axios = require("axios");
 let helpers = require("./helpers");
 
 const app = express();
-app.use(cookieParser()).use(cors({origin: true}));
 let router = express.Router();
+router.use(cookieParser()).use(cors({origin: true}));
 
 import AggregatedTracksByArtist from "./models/AggregatedTracksByArtist";
 import Playlist from "./models/Playlist";
@@ -18,6 +18,8 @@ import Image from "./models/Image"
 
 // query string needs access_token and user_id
 router.get("/update-users-playlists", async (req, res) => {
+    res.set('Access-Control-Allow-Origin', "*")
+    res.set('Access-Control-Allow-Methods', 'GET, POST');
     console.log("Run Cron Job")
     // Get 50 most recently liked songs 
     let savedTracksOptions = {
@@ -198,6 +200,4 @@ router.get("/update-users-playlists", async (req, res) => {
     res.send("FINISHED GETTING TRACKS.")
 })
 
-app.use(router)
-
-export default app;
+module.exports = router
