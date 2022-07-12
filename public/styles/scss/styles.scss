@@ -101,3 +101,43 @@ a {
 .btn-danger:hover {
   background-color: $spotify-hover-red;
 }
+
+.modal-content {
+  background-color: $spotify-lightgrey;
+}
+
+
+.loading-3 {
+  .loading {
+    background: transparent;
+    width: 2em;
+    height: 80px;
+    position: relative;
+    margin:0 auto;
+  }
+  .loading:after {
+    display: block;
+    content: "";
+    border-radius: 50%;
+    height: 2px;
+    width: 2px;
+    position: absolute;
+    margin: auto;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    box-shadow: 20px 0 0 4px #333, 14px 14px 0 4px #999, 0 20px 0 4px #999, -14px 14px 0 4px #999, -20px 0 0 4px #999, -14px -14px 0 4px #999, 0 -20px 0 4px #333, 14px -14px 0 4px #111;
+    -webkit-animation: rotate 0.7s steps(8) infinite;
+    -o-animation: rotate 0.7s steps(8) infinite;
+    animation: rotate 0.7s steps(8) infinite;
+  }
+  @keyframes rotate {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}
