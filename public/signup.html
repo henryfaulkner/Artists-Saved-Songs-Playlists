@@ -100,13 +100,13 @@
         function subscribe() {
             let url;
             if(window.location.href.includes("http://localhost:5000/")) {
-                serverBaseUrl = "http://localhost:5001/artists-saved-songs-playlists/us-east1/expressAPI/";
+                serverBaseUrl = "http://localhost:5001/artists-saved-songs-playlists/us-east1/";
                 url = `${serverBaseUrl}subscribe`;
             } else if(window.location.href.includes("http://localhost:8888/")) {
                 serverBaseUrl = "http://localhost:8888/";
                 url = `${serverBaseUrl}subscribe`;
             } else {
-                serverBaseUrl = "https://us-east1-artists-saved-songs-playlists.cloudfunctions.net/expressAPI/";
+                serverBaseUrl = "https://api-qdsvmmfcoq-ue.a.run.app/";
                 url = `${serverBaseUrl}subscribe`;
             }
 

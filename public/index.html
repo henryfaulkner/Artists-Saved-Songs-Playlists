@@ -68,7 +68,7 @@
 
         // PLEASE CHANGE TO fetches onclick
         if(window.location.href.includes("http://localhost:5000/")) {
-          serverBaseUrl = "http://localhost:5001/artists-saved-songs-playlists/us-east1/expressAPI/";
+          serverBaseUrl = "http://localhost:5001/artists-saved-songs-playlists/us-east1/";
           document.getElementById("login-btn").href = `${serverBaseUrl}login`;
           document.getElementById("run-process-btn").href = `${serverBaseUrl}run-process/?access_token=${queryParams["access_token"]}&refresh_token=${queryParams["refresh_token"]}&spotify_user_id=${queryParams["spotify_user_id"]}`;
           document.getElementById("unfollow-root-playlists-btn").href = `${serverBaseUrl}unfollow-root-playlists/?spotify_user_id=${queryParams["spotify_user_id"]}`;
@@ -80,7 +80,7 @@
           document.getElementById("unfollow-root-playlists-btn").href = `${serverBaseUrl}unfollow-root-playlists/?spotify_user_id=${queryParams["spotify_user_id"]}`;
           document.getElementById("logout-btn").href = `${serverBaseUrl}logout`;
         } else {
-          serverBaseUrl = "https://us-east1-artists-saved-songs-playlists.cloudfunctions.net/expressAPI/";
+          serverBaseUrl = "https://api-qdsvmmfcoq-ue.a.run.app/";
           document.getElementById("login-btn").href = `${serverBaseUrl}login`;
           document.getElementById("run-process-btn").href = `${serverBaseUrl}run-process/?access_token=${queryParams["access_token"]}&refresh_token=${queryParams["refresh_token"]}&spotify_user_id=${queryParams["spotify_user_id"]}`;
           document.getElementById("unfollow-root-playlists-btn").href = `${serverBaseUrl}unfollow-root-playlists/?access_token=${queryParams["access_token"]}&spotify_user_id=${queryParams["spotify_user_id"]}`;

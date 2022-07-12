@@ -26,7 +26,7 @@ import Image from "./models/Image"
 
 const client_id: string = process.env.CLIENT_ID; // Your client id
 const client_secret: string = process.env.CLIENT_SECRET; // Your secret
-const redirect_uri: string = `${process.env.SERVER_ENV}/expressAPI/callback`; // Your redirect uri
+const redirect_uri: string = `${process.env.SERVER_ENV}/callback`; // Your redirect uri
 let stateKey = 'spotify_auth_state';
 let router = express_routes.Router();
 let aggregatedTracksByArtistList: AggregatedTracksByArtist[] = [];
@@ -194,9 +194,6 @@ router.get("/run-process", async function(req, res) {
       // Get all the playlists
       aggregatedTracksByArtistList = aggregatedTracksByArtistList.concat(helpers.GetAggregatedTracksByArtist(trackArr));
 
-      if(res.data?.next === null) {
-        console.log(res)
-      }
       if(res.data?.next === null && res.data?.total !== 0) {
         finiteLoop = 0;
       }
@@ -268,7 +265,6 @@ router.get("/run-process", async function(req, res) {
           if(res.status === 201 || res.status === 200) f = 5;
           console.log("Add track: "+res.status);
         })
-        
       } catch(error) {
         console.log("An exception occurred when adding a track.");
       }
@@ -333,6 +329,25 @@ router.get("/unfollow-root-playlists", async function(req, res) {
         }
     }
     
+    //Check if anymore remain
+    if(!hasFiveOTwo) {
+      let usersPlaylistsUrl = 'https://api.spotify.com/v1/me/playlists';
+      let playlistArr = [];
+      let res = await axios(usersPlaylistsUrl, {
+        method: 'GET',
+        headers: { 
+          'authorization': 'Bearer ' + req.query.access_token,
+          'Content-Type': 'application/json',              
+        },
+        json: true
+      });
+      for(let i = 0; i < res.data['items']?.length ?? 0; i++) {
+        playlistArr.push(res.data['items'][i]);
+      }
+      // Keep only playlists I made
+      playlistArr = playlistArr.filter(playlist => playlist.name.includes("- $saved"));
+      if(playlistArr.length) hasFiveOTwo = true;
+    }
     if(hasFiveOTwo) console.log("Looping through all playlists again.")
     console.log(hasFiveOTwo)
   }
@@ -391,9 +406,9 @@ router.get('/update-subscribers', async function(req, res) {
   console.log("users.length")
   console.log(users.length)
   for(let i = 0; i < users.length; i++) {
-    console.log(`${process.env.SERVER_ENV}/expressAPI/refresh_token?refresh_token=${users[i].refresh_token}`)
+    console.log(`${process.env.SERVER_ENV}/refresh_token?refresh_token=${users[i].refresh_token}`)
     // Async refresh access token
-    const response = await axios.get(`${process.env.SERVER_ENV}/expressAPI/refresh_token?refresh_token=${users[i].refresh_token}`, 
+    const response = await axios.get(`${process.env.SERVER_ENV}/refresh_token?refresh_token=${users[i].refresh_token}`, 
       {
         'Content-Type': "application/json",
         json: true
@@ -412,7 +427,7 @@ router.get('/update-subscribers', async function(req, res) {
     // Functions can only handle a single request at a time
     // Multithreading may be necessary 
     // Parallel Execution: https://www.youtube.com/watch?v=MzTS6mFDGjU&list=PLl-K7zZEsYLm9A9rcHb1IkyQUu6QwbjdM&index=3
-    axios(`${process.env.SERVER_ENV}/expressAPI/update-users-playlists?access_token=${params.access_token}&spotify_user_id=${params.spotify_user_id}`,
+    axios(`${process.env.SERVER_ENV}/update-users-playlists?access_token=${params.access_token}&spotify_user_id=${params.spotify_user_id}`,
       {
         method: 'GET',
         headers: { 
@@ -459,21 +474,18 @@ router.get("/update-users-playlists", async (req, res) => {
   aggregatedTracksByArtistList = helpers.RemoveDuplicateTrackLists(aggregatedTracksByArtistList);
 
   // Get all user's playlists
-  let usersPlaylistsOptions = {
-      url: `https://api.spotify.com/v1/me/playlists`,
-      headers: { 'authorization': 'Bearer ' + req.query.access_token },
-      'Content-Type': "application/json",
-      json: true
-  };
+  let usersPlaylistsUrl = 'https://api.spotify.com/v1/me/playlists';
   let finiteLoop = 500;
   let playlistArr = [];
   try {
       while(finiteLoop >= 0) {
-          let res = await axios(usersPlaylistsOptions.url, {
+          let res = await axios(usersPlaylistsUrl, {
               method: 'GET',
-              headers: usersPlaylistsOptions.headers,
-              'Content-Type': usersPlaylistsOptions["Content-Type"],
-              json: usersPlaylistsOptions.json
+              headers: { 
+                'authorization': 'Bearer ' + req.query.access_token,
+                'Content-Type': 'application/json',              
+              },
+              json: true
           });
           for(let i = 0; i < res.data['items']?.length ?? 0; i++) {
               playlistArr.push(res.data['items'][i]);
@@ -481,9 +493,9 @@ router.get("/update-users-playlists", async (req, res) => {
           if(res.data?.next === null && res.data?.total !== 0) {
               finiteLoop = 0;
           }
-          usersPlaylistsOptions.url = res.data.next;
-          if(res.data.total === 0) usersPlaylistsOptions.url = res.data.href;
-          if(usersPlaylistsOptions.url === undefined) finiteLoop = 0;
+          usersPlaylistsUrl = res.data.next;
+          if(res.data.total === 0) usersPlaylistsUrl = res.data.href;
+          if(usersPlaylistsUrl === undefined) finiteLoop = 0;
           finiteLoop = finiteLoop - 1;
       }
   } catch(exception) {
