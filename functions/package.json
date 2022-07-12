@@ -5,7 +5,7 @@
   "version": "0.0.1",
   "main": "build/server.js",
   "scripts": {
-    "start": "npx functions-framework --source=build/server.js --target=expressAPI",
+    "start": "npx functions-framework --source=build/server.js --target=api",
     "local": "npm run compile-sass; npx nodemon functions/server.ts",
     "build": "tsc --outDir build",
     "watch-sass": "node-sass --watch ./public/styles/scss -o ./public/styles/css",

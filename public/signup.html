@@ -78,7 +78,7 @@
 
             <div id="content">
                 <div id="login" >
-                    <button type="button" onclick="subscribe(); console.log('brrrr');" href="" id="subscribe" class="btn btn-success btn-lg" style="width: inherit;">Signup</button>
+                    <button type="button" onclick="subscribe(); console.log('brrrr');" id="subscribe-btn" class="btn btn-success btn-lg" style="width: inherit;">Signup</button>
                 </div>
             </div>
         </div>
@@ -98,13 +98,28 @@
         }
 
         function subscribe() {
+            let url;
+            if(window.location.href.includes("http://localhost:5000/")) {
+                serverBaseUrl = "http://localhost:5001/artists-saved-songs-playlists/us-east1/";
+                url = `${serverBaseUrl}subscribe`;
+            } else if(window.location.href.includes("http://localhost:8888/")) {
+                serverBaseUrl = "http://localhost:8888/";
+                url = `${serverBaseUrl}subscribe`;
+            } else {
+                serverBaseUrl = "https://api-qdsvmmfcoq-ue.a.run.app/";
+                url = `${serverBaseUrl}subscribe`;
+            }
+
+            const queryParams = getHashParams();
             const request = {
                 name: document.getElementById("name").value,
                 email: document.getElementById("email").value,
-                password: document.getElementById("password").value
+                password: document.getElementById("password").value,
+                refresh_token: queryParams["refresh_token"],
+                spotify_user_id: queryParams["spotify_user_id"]
             }
             console.log(request.name)
-            fetch(document.getElementById("subscribe").href, {
+            fetch(url, {
                 method: "POST",
                 body: JSON.stringify(request),
                 headers: {
@@ -113,18 +128,21 @@
             });
         }
 
-        if(window.location.href.includes("http://localhost:5000/")) {
-            serverBaseUrl = "http://localhost:5001/artists-saved-songs-playlists/us-east1/expressAPI/";
-            console.log(`${serverBaseUrl}subscribe`)
-            document.getElementById("subscribe").href = `${serverBaseUrl}subscribe`;
-        } else if(window.location.href.includes("http://localhost:8888/")) {
-            serverBaseUrl = "http://localhost:8888/";
-            document.getElementById("subscribe").href = `${serverBaseUrl}subscribe`;
-        } else {
-            serverBaseUrl = "https://us-east1-artists-saved-songs-playlists.cloudfunctions.net/expressAPI/";
-            console.log(`${serverBaseUrl}subscribe`)
-            document.getElementById("subscribe").href = `${serverBaseUrl}subscribe`;
+        /**
+         * Obtains parameters from the hash of the URL
+         * @return Object
+         */
+        function getHashParams() {
+            var hashParams = {};
+            var e, r = /([^&;=]+)=?([^&;]*)/g,
+                q = window.location.hash.substring(1);
+            while ( e = r.exec(q)) {
+                hashParams[e[1]] = decodeURIComponent(e[2]);
+            }
+            return hashParams;
         }
+
+        
     </script>
   </body>
 </html>

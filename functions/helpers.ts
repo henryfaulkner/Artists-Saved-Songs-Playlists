@@ -1,6 +1,7 @@
 var isEqual = require('lodash.isequal');
 import AggregatedTracksByArtist from "./models/AggregatedTracksByArtist";
 import Artist from "./models/Artist";
+import Playlist from "./models/Playlist";
 import Track from "./models/Track";
 
 /**

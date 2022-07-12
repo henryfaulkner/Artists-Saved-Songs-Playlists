@@ -7,18 +7,15 @@ let cookieParser = require('cookie-parser');
 require('dotenv').config();
 let helpers = require("./helpers");
 import {
-  Firestore,
   collection,
   addDoc,
+  getDocs
 } from "firebase/firestore";
 import { firestore, auth } from "./lib/firebase";
 import * as CollectionConstants from "./lib/CollectionConstants";
 import FirestoreUser from "./lib/FirestoreUser";
 import {
-  signInWithEmailAndPassword,
-  signOut,
-  createUserWithEmailAndPassword,
-  UserCredential,
+  createUserWithEmailAndPassword
 } from "firebase/auth";
 
 import AggregatedTracksByArtist from "./models/AggregatedTracksByArtist";
@@ -32,7 +29,6 @@ const client_secret: string = process.env.CLIENT_SECRET; // Your secret
 const redirect_uri: string = `${process.env.SERVER_ENV}/callback`; // Your redirect uri
 let stateKey = 'spotify_auth_state';
 let router = express_routes.Router();
-let user: User;
 let aggregatedTracksByArtistList: AggregatedTracksByArtist[] = [];
 
 router.use(express_routes.static(__dirname + '/public'))
@@ -52,7 +48,7 @@ router.get('/login', function(req, res) {
   res.cookie(stateKey, state);
 
   // your application requests authorization
-  let scope = 'playlist-modify-private playlist-read-private user-library-read ugc-image-upload';
+  let scope = 'playlist-modify-private playlist-read-private user-library-read ugc-image-upload user-read-private user-read-email';
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
       response_type: 'code',
@@ -63,7 +59,7 @@ router.get('/login', function(req, res) {
     }));
 });
 
-router.get('/callback', function(req, res) {
+router.get('/callback', async function(req, res) {
   // your application requests refresh and access tokens
   // after checking the state parameter
 
@@ -78,56 +74,62 @@ router.get('/callback', function(req, res) {
       }));
   } else {
     res.clearCookie(stateKey);
-    let authOptions = {
-      url: 'https://accounts.spotify.com/api/token',
-      form: {
-        code: code,
-        redirect_uri: redirect_uri,
-        grant_type: 'authorization_code'
-      },
+    const data = {
+      //grant_type: 'client_credentials',
+      code: code,
+      redirect_uri: redirect_uri,
+      grant_type: 'authorization_code'
+    };
+    const headers = {
+      method: "POST",
       headers: {
-        'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64'))
+        Accept: 'application/json',
+        'Authorization': 'Basic ' + (new Buffer(process.env.CLIENT_ID + ':' + process.env.CLIENT_SECRET).toString('base64')),
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
-      json: true
+      params: data,
     };
 
-    request.post(authOptions, function(error, response, body) {
-      if (!error && response.statusCode === 200) {
+    const response = await axios('https://accounts.spotify.com/api/token',
+      headers)
+      .catch(error => {
+        console.log("Could not get tokens")
+      });
+  
+    if (response.status === 200) {
+      let access_token = response.data.access_token;
+      let refresh_token = response.data.refresh_token;
+      console.log("access_token")
+      console.log(access_token)
 
-        let access_token = body.access_token,
-            refresh_token = body.refresh_token;
+      //use the access token to access the Spotify Web API
+      const userRes = await axios('https://api.spotify.com/v1/me', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + access_token
+        }
+      })
+      .catch(error => {
+        console.log("Could not get user profile.")
+        console.log(error)
+      });
 
-        res.cookie("auth_token", access_token);
+      let user = userRes.data;
 
-        process.env.access_token = access_token;
-        process.env.refresh_token = refresh_token;
-
-        let options = {
-          url: 'https://api.spotify.com/v1/me',
-          headers: { 'Authorization': 'Bearer ' + access_token },
-          json: true
-        };
-
-        // use the access token to access the Spotify Web API
-        request.get(options, function(error, response, body) {
-          user = body;
-          console.log(body);
-          console.log(access_token)
-        });
-
-        // we can also pass the token to the browser to make requests from there
-        res.redirect(process.env.CLIENT_ENV + '/#' +
-          querystring.stringify({
-            access_token: access_token,
-            refresh_token: refresh_token
-          }));
-      } else {
-        res.redirect(process.env.CLIENT_ENV + '/#' +
-          querystring.stringify({
-            error: 'invalid_token'
-          }));
-      }
-    });
+      // we can also pass the token to the browser to make requests from there
+      res.redirect(process.env.CLIENT_ENV + '/#' +
+        querystring.stringify({
+          access_token: access_token,
+          refresh_token: refresh_token,
+          spotify_user_id: user.id
+        }));
+    } else {
+      res.redirect(process.env.CLIENT_ENV + '/#' +
+        querystring.stringify({
+          error: 'invalid_token'
+        }));
+    }
   }
 });
 
@@ -143,7 +145,6 @@ router.get('/refresh_token', function(req, res) {
     },
     json: true
   };
-
   request.post(authOptions, function(error, response, body) {
     if (!error && response.statusCode === 200) {
       let access_token = body.access_token;
@@ -168,61 +169,21 @@ router.get("/get-liked-tracks", async function(req, res) {
   res.send(aggregatedTracksByArtistList);
 });
 
-router.get("/set-artist-image", function(req, res) {
-  let artistOptions = {
-    url: `${req["artist_href"]}`, //https://api.spotify.com/v1/artists/{id}
-    headers: { 'authorization': 'Bearer ' + process.env.access_token },
-    'Content-Type': "application/json",
-    json: true
-  };
-
-  request(artistOptions, (error, response, body) => {
-    if(error) console.log(error);
-    console.log(response.statusCode);
-      
-    res = body["images"];
-  });
-});
-
-// TODO: Use Add Custom Playlist Cover Image 
-router.get("/set-artists-image", function(req, res) {
-  for(let i = 0; i < aggregatedTracksByArtistList.length; i++){
-    let artistOptions = {
-      url: `${aggregatedTracksByArtistList[i].Artist.href}`, //https://api.spotify.com/v1/artists/{id}
-      headers: { 'authorization': 'Bearer ' + process.env.access_token },
-      'Content-Type': "application/json",
-      json: true
-    };
-
-    request(artistOptions, (error, response, body) => {
-      if(error) console.log(error);
-      if(response) console.log(response.statusCode);
-        
-      if(body === undefined || body["images"] === undefined) aggregatedTracksByArtistList[i].Artist.Image = new Image({});
-      else aggregatedTracksByArtistList[i].Artist.Image = body["images"][0];
-    });
-  }
-  res.redirect('/');
-})
-
 // Main program thread
+// Introduce Parallel Execution to avoid timeout
 router.get("/run-process", async function(req, res) {
   console.log("Run Process")
-  let savedTracksOptions = {
-    url: 'https://api.spotify.com/v1/me/tracks',
-    headers: { 'authorization': 'Bearer ' + process.env.access_token },
-    'Content-Type': "application/json",
-    json: true
-  };
-
+  let savedTracksUrl = 'https://api.spotify.com/v1/me/tracks';
   let finiteLoop = 500;
   try {
     while(finiteLoop >= 0) {
-      let res = await axios(savedTracksOptions.url, {
+      let res = await axios(savedTracksUrl, {
         method: 'GET',
-        headers: savedTracksOptions.headers,
-        'Content-Type': savedTracksOptions["Content-Type"],
-        json: savedTracksOptions.json
+        headers: { 
+          'authorization': 'Bearer ' + req.query.access_token,
+          'Content-Type': 'application/json',
+        },
+        json: true
       });
       
       const trackArr: Track[] = [];
@@ -233,33 +194,30 @@ router.get("/run-process", async function(req, res) {
       // Get all the playlists
       aggregatedTracksByArtistList = aggregatedTracksByArtistList.concat(helpers.GetAggregatedTracksByArtist(trackArr));
 
-      if(res.data?.next === null) {
-        console.log(res)
-      }
       if(res.data?.next === null && res.data?.total !== 0) {
         finiteLoop = 0;
       }
-      savedTracksOptions.url = res.data.next;
-      if(res.data.total === 0) savedTracksOptions.url = res.data.href;
+      savedTracksUrl = res.data.next;
+      if(res.data.total === 0) savedTracksUrl = res.data.href;
       console.log(res.status)
       console.log(res.data.next)
-      if(savedTracksOptions.url === undefined) finiteLoop = 0;
+      if(savedTracksUrl === undefined) finiteLoop = 0;
       finiteLoop = finiteLoop - 1;
     }
   } catch(exception) {
     console.log("An exception occurred when getting liked tracks.");
-    console.log(exception);
   }
   console.log("FINISHED GETTING TRACKS.")
   aggregatedTracksByArtistList = helpers.RemoveDuplicateTrackLists(aggregatedTracksByArtistList);
 
   // Create playlists
+  //aggregatedTracksByArtistList.forEach(async aggregatedTracksByArtist => {//for(let i = 0; i < aggregatedTracksByArtistList.length; i++) {
   for(let i = 0; i < aggregatedTracksByArtistList.length; i++) {
     let playlist: Playlist = null
     for(let h = 0; h < 5; h++) {
       if(h > 0) console.log("Playlist creation retry. " + h)
       try {
-        await axios(`https://api.spotify.com/v1/users/${user.id}/playlists`, {
+        await axios(`https://api.spotify.com/v1/users/${req.query.spotify_user_id}/playlists`, {
           method: 'POST',
           data: {
             name: `z${aggregatedTracksByArtistList[i].Artist.name} - $saved`,
@@ -270,7 +228,7 @@ router.get("/run-process", async function(req, res) {
           headers: { 
             "Content-Type": "application/json",
             'Accept' : 'application/json',
-            'authorization': 'Bearer ' + process.env.access_token 
+            'authorization': 'Bearer ' + req.query.access_token 
           },
           json: true
         }).then((res) => {
@@ -278,7 +236,6 @@ router.get("/run-process", async function(req, res) {
           playlist = new Playlist(res.data ?? {});
           console.log("Add playlist: " + res.status);
         });  
-        
       } catch(error) {
         console.log("An exception occurred when creating a playlist.")
       };
@@ -289,40 +246,33 @@ router.get("/run-process", async function(req, res) {
       trackUris.push(aggregatedTracksByArtistList[i].Tracks[h].uri);
     }
 
-    if(playlist === null) continue;
-    let addTracksOptions = {
-      url: `https://api.spotify.com/v1/playlists/${playlist.id}/tracks`,
-      data: {
-        position: "0",
-        uris: trackUris
-      },
-      headers: { 
-        'Content-Type': "application/json",
-        'authorization': 'Bearer ' + process.env.access_token 
-      },
-      json: true
-    }
+    if(playlist === null) return;
     for(let f = 0; f < 5; f++){
       if(f > 0) console.log("Retry adding track. " + f)
       try {
-        const response = await axios(addTracksOptions.url, {
+        const response = await axios(`https://api.spotify.com/v1/playlists/${playlist.id}/tracks`, {
           method: 'POST',
-          data: addTracksOptions.data,
-          headers: addTracksOptions.headers,
-          json: addTracksOptions.json
+          data: {
+            position: "0",
+            uris: trackUris
+          },
+          headers: { 
+            'Content-Type': "application/json",
+            'authorization': 'Bearer ' + req.query.access_token 
+          },
+          json: true
         }).then((res) => {
           if(res.status === 201 || res.status === 200) f = 5;
           console.log("Add track: "+res.status);
         })
-        
       } catch(error) {
         console.log("An exception occurred when adding a track.");
       }
     }
-  }
+  };
   console.log("Finished creating playlists!");
   aggregatedTracksByArtistList = [];
-  res.redirect(process.env.CLIENT_ENV + "/successfulCreate.html");
+  res.redirect(`${process.env.CLIENT_ENV}/successfulCreate.html#access_token=${req.query.access_token}&refresh_token=${req.query.refresh_token}&spotify_user_id=${req.query.spotify_user_id}`);
 })
 
 router.get("/unfollow-root-playlists", async function(req, res) {
@@ -330,40 +280,30 @@ router.get("/unfollow-root-playlists", async function(req, res) {
   let hasFiveOTwo: boolean = true;
   while(hasFiveOTwo) {
     hasFiveOTwo = false;
-    let getPlaylistsOptions = {
-      url: `https://api.spotify.com/v1/users/${user.id}/playlists`,
-      headers: { 'authorization': 'Bearer ' + process.env.access_token },
-      'Content-Type': "application/json",
-      json: true
-    };
-
     let finiteLoop = 500;
+    let getPlaylistsUrl: string = `https://api.spotify.com/v1/users/${req.query.spotify_user_id}/playlists`;
       while(finiteLoop >= 0) {
         try {
           let res = null;
           // Get all playlists 
-          await axios.get(getPlaylistsOptions.url, {
-            headers: getPlaylistsOptions.headers,
-            'Content-Type': getPlaylistsOptions["Content-Type"],
-            json: getPlaylistsOptions.json
+          await axios.get(getPlaylistsUrl, {
+            headers: { 
+              'authorization': 'Bearer ' + req.query.access_token,
+              'Content-Type': 'application/json',
+            },
+            json: true
           })
           .then(async function(response) {
             res = response.data;
             for(let i = 0; i < response.data["items"].length; i++) {
               if(response.data["items"][i]["name"].includes("- $saved")) {
-                const deletePlaylistOptions = {
-                  url: `https://api.spotify.com/v1/playlists/${response.data["items"][i]["id"]}/followers`,
-                  headers: { 'authorization': 'Bearer ' + process.env.access_token },
+                await axios.delete(`https://api.spotify.com/v1/playlists/${response.data["items"][i]["id"]}/followers`, {
+                  headers: { 
+                    'Content-Type': 'application/json',
+                    'authorization': 'Bearer ' + req.query.access_token 
+                  },
+                  json: true,
                   method: "DELETE",
-                  'Content-Type': "application/json",
-                  json: true
-                };
-
-                await axios.delete(deletePlaylistOptions.url, {
-                  headers: deletePlaylistOptions.headers,
-                  'Content-Type': deletePlaylistOptions["Content-Type"],
-                  json: deletePlaylistOptions.json,
-                  method: deletePlaylistOptions.method
                 })
                 .then(function(response) {
                   console.log(response.status);
@@ -381,35 +321,53 @@ router.get("/unfollow-root-playlists", async function(req, res) {
           if(res?.next === null) {
             finiteLoop = 0;
           }
-          getPlaylistsOptions.url = res.next;
-          if(getPlaylistsOptions.url === undefined) finiteLoop = 0;
+          getPlaylistsUrl = res.next;
+          if(getPlaylistsUrl === undefined) finiteLoop = 0;
           finiteLoop = finiteLoop - 1;
         } catch(exception) {
           console.log("An exception occurred when removing playlists.")
         }
     }
     
+    //Check if anymore remain
+    if(!hasFiveOTwo) {
+      let usersPlaylistsUrl = 'https://api.spotify.com/v1/me/playlists';
+      let playlistArr = [];
+      let res = await axios(usersPlaylistsUrl, {
+        method: 'GET',
+        headers: { 
+          'authorization': 'Bearer ' + req.query.access_token,
+          'Content-Type': 'application/json',              
+        },
+        json: true
+      });
+      for(let i = 0; i < res.data['items']?.length ?? 0; i++) {
+        playlistArr.push(res.data['items'][i]);
+      }
+      // Keep only playlists I made
+      playlistArr = playlistArr.filter(playlist => playlist.name.includes("- $saved"));
+      if(playlistArr.length) hasFiveOTwo = true;
+    }
     if(hasFiveOTwo) console.log("Looping through all playlists again.")
     console.log(hasFiveOTwo)
   }
   console.log("Finished deleting playlists.")
-  res.redirect(process.env.CLIENT_ENV + "/successfulUnfollow.html");
+  res.redirect(`${process.env.CLIENT_ENV}/successfulUnfollow.html#access_token=${req.query.access_token}&spotify_user_id=${req.query.spotify_user_id}`);
 });
 
 router.post('/subscribe', async function(req, res) {
   const name: string = req.body.name;
   const email: string = req.body.email;
   const password: string = req.body.password;
-  
+
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const userObj = new FirestoreUser({
       name: name,
-      refresh_token: process.env.refresh_token,
-      UserID: userCredential.user.uid
+      refresh_token: req.body.refresh_token,
+      AuthID: userCredential.user.uid,
+      SpotifyUserID: req.body.spotify_user_id
     });
-    console.log("process.env.refresh_token")
-    console.log(process.env.refresh_token)
     console.log("userObj")
     console.log(userObj)
     addDoc(
@@ -418,12 +376,270 @@ router.post('/subscribe', async function(req, res) {
     ).then((res) => {
       userObj.SetDocumentID = res.id;
     });
-    
     console.log("Successfully created user");
     res.redirect(process.env.CLIENT_ENV);
   } catch (exception) {
     console.log("Something went wrong.");
   }
 });
+
+// call individually for every subscribed user
+// can't do all users in one call because of timeout
+// Scheduled Job url:
+// https://console.cloud.google.com/cloudscheduler?project=artists-saved-songs-playlists
+router.get('/update-subscribers', async function(req, res) {
+  const data = await getDocs(
+    collection(firestore, CollectionConstants.Users)
+  );
+  const users: FirestoreUser[] = [];
+  data.forEach((doc) => {
+    users.push(
+      new FirestoreUser({
+        name: doc.data().name,
+        refresh_token: doc.data().refresh_token,
+        AuthID: doc.data().AuthID,
+        SpotifyUserID: doc.data().SpotifyUserID,
+        DocumentID: doc.id,
+      })
+    );
+  });
+  console.log("users.length")
+  console.log(users.length)
+  for(let i = 0; i < users.length; i++) {
+    console.log(`${process.env.SERVER_ENV}/refresh_token?refresh_token=${users[i].refresh_token}`)
+    // Async refresh access token
+    const response = await axios.get(`${process.env.SERVER_ENV}/refresh_token?refresh_token=${users[i].refresh_token}`, 
+      {
+        'Content-Type': "application/json",
+        json: true
+      }
+    )
+    .catch(function(error) {
+      console.log("Failed to refresh token.")
+    })
+    const access_token: string = response.data.access_token;
+    
+    const params = {
+      access_token: access_token,
+      spotify_user_id: users[i].SpotifyUserID
+    };
+    // Wanted to be synchronous but
+    // Functions can only handle a single request at a time
+    // Multithreading may be necessary 
+    // Parallel Execution: https://www.youtube.com/watch?v=MzTS6mFDGjU&list=PLl-K7zZEsYLm9A9rcHb1IkyQUu6QwbjdM&index=3
+    axios(`${process.env.SERVER_ENV}/update-users-playlists?access_token=${params.access_token}&spotify_user_id=${params.spotify_user_id}`,
+      {
+        method: 'GET',
+        headers: { 
+          "Content-Type": 'application/json',
+          'Accept' : 'application/json'
+        }
+      }
+    )
+    .catch(function(error) {
+      console.log("Failed to update users' playlists.")
+    })
+  }
+
+  res.send({success: "success"})
+})
+
+router.get("/update-users-playlists", async (req, res) => {
+  console.log("Run Cron Job")
+  // Get 50 most recently liked songs 
+  let savedTracksOptions = {
+      url: 'https://api.spotify.com/v1/me/tracks?limit=50',
+      headers: { 'authorization': 'Bearer ' + req.query.access_token },
+      'Content-Type': "application/json",
+      json: true
+  };
+  let aggregatedTracksByArtistList: AggregatedTracksByArtist[] = [];
+  try {
+      let res = await axios(savedTracksOptions.url, {
+          method: 'GET',
+          headers: savedTracksOptions.headers,
+          'Content-Type': savedTracksOptions["Content-Type"],
+          json: savedTracksOptions.json
+      });
+      const trackArr: Track[] = [];
+      for(let i = 0; i < res.data['items']?.length ?? 0; i++) {
+          trackArr.push(new Track(res.data['items'][i]['track']));
+      }
+      // Get all the playlists
+      aggregatedTracksByArtistList = aggregatedTracksByArtistList.concat(helpers.GetAggregatedTracksByArtist(trackArr));
+  } catch(exception) {
+      console.log("An exception occurred when getting liked tracks.");
+  }
+  console.log("FINISHED GETTING TRACKS.")
+  aggregatedTracksByArtistList = helpers.RemoveDuplicateTrackLists(aggregatedTracksByArtistList);
+
+  // Get all user's playlists
+  let usersPlaylistsUrl = 'https://api.spotify.com/v1/me/playlists';
+  let finiteLoop = 500;
+  let playlistArr = [];
+  try {
+      while(finiteLoop >= 0) {
+          let res = await axios(usersPlaylistsUrl, {
+              method: 'GET',
+              headers: { 
+                'authorization': 'Bearer ' + req.query.access_token,
+                'Content-Type': 'application/json',              
+              },
+              json: true
+          });
+          for(let i = 0; i < res.data['items']?.length ?? 0; i++) {
+              playlistArr.push(res.data['items'][i]);
+          }
+          if(res.data?.next === null && res.data?.total !== 0) {
+              finiteLoop = 0;
+          }
+          usersPlaylistsUrl = res.data.next;
+          if(res.data.total === 0) usersPlaylistsUrl = res.data.href;
+          if(usersPlaylistsUrl === undefined) finiteLoop = 0;
+          finiteLoop = finiteLoop - 1;
+      }
+  } catch(exception) {
+    console.log("An exception occurred when getting liked tracks.");
+  }
+  // Keep only playlists I made
+  playlistArr = playlistArr.filter(playlist => playlist.name.includes("- $saved"));
+
+  for(let i = 0; i < aggregatedTracksByArtistList.length; i++) {
+      const playlistName: string = `z${aggregatedTracksByArtistList[i].Artist.name} - $saved`;
+      // Get playlist by name 
+      // .href: string
+      const matchingPlaylistArr = playlistArr.filter(playlist => playlist.name.includes(playlistName));
+      if(matchingPlaylistArr.length) {
+        const existingPlaylistWithHref = matchingPlaylistArr[0];
+        // GET TRACKS IN EXISTING PLAYLIST
+        const resTracks = await axios(existingPlaylistWithHref.tracks.href, {
+          method: 'GET',
+          headers: {
+            'authorization': 'Bearer ' + req.query.access_token,
+            'Content-Type': "application/json",
+            json: true
+          }
+        })
+        const existingPlaylistTracks: Track[] = resTracks.data.items.map(item => new Track(item.track))
+
+        // n^2 Search could be improved
+        // no repeat adds
+        const newTrackUris: string[] = [];
+        for(let h = 0; h < aggregatedTracksByArtistList[i].Tracks.length; h++) {
+          let hasSong: boolean = false;
+          for(let j = 0; j < existingPlaylistTracks.length; j++){
+            if(aggregatedTracksByArtistList[i].Tracks[h].name === existingPlaylistTracks[j].name) {
+              hasSong = true;
+              break;
+            }
+          } 
+          if(!hasSong) {
+            newTrackUris.push(aggregatedTracksByArtistList[i].Tracks[h].uri)
+          }
+        }
+
+        if(newTrackUris.length) {
+          // add new tracks to playlist
+          let addTracksOptions = {
+            url: `https://api.spotify.com/v1/playlists/${existingPlaylistWithHref.id}/tracks`,
+            data: {
+                position: "0",
+                uris: newTrackUris
+            },
+            headers: { 
+                'Content-Type': "application/json",
+                'authorization': 'Bearer ' + req.query.access_token 
+            },
+            json: true
+          }
+          for(let f = 0; f < 5; f++){
+              if(f > 0) console.log("Retry adding track. " + f)
+              try {
+                  const response = await axios(addTracksOptions.url, {
+                  method: 'POST',
+                  data: addTracksOptions.data,
+                  headers: addTracksOptions.headers,
+                  json: addTracksOptions.json
+                  }).then((res) => {
+                  if(res.status === 201 || res.status === 200) f = 5;
+                    console.log("Add track: "+res.status);
+                  })
+                  
+              } catch(error) {
+                  console.log("An exception occurred when adding a track.");
+              }
+          }
+        }
+      } else if(!matchingPlaylistArr.length) {
+          // If that fails, make the playlist
+          let playlist: Playlist = null
+          for(let h = 0; h < 5; h++) {
+              if(h > 0) console.log("Playlist creation retry. " + h)
+              try {
+                  await axios(`https://api.spotify.com/v1/users/${req.query.spotify_user_id}/playlists`, {
+                  method: 'POST',
+                  data: {
+                      name: `z${aggregatedTracksByArtistList[i].Artist.name} - $saved`,
+                      public: false, //private playlist
+                      collaborative: false,
+                      description: `Your favorite songs from ${aggregatedTracksByArtistList[i].Artist.name}`
+                  },
+                  headers: { 
+                      "Content-Type": "application/json",
+                      'Accept' : 'application/json',
+                      'authorization': 'Bearer ' + req.query.access_token 
+                  },
+                  json: true
+                  }).then((res) => {
+                      if(res.status === 201) h = 5;
+                      playlist = new Playlist(res.data ?? {});
+                      console.log("Add playlist: " + res.status);
+                  });  
+                  
+              } catch(error) {
+                  console.log("An exception occurred when creating a playlist.")
+              };
+          }
+
+          let trackUris: string[] = [];
+          for(let h = 0; h < aggregatedTracksByArtistList[i].Tracks.length; h++) {
+              trackUris.push(aggregatedTracksByArtistList[i].Tracks[h].uri);
+          }
+
+          if(playlist === null) continue;
+          let addTracksOptions = {
+          url: `https://api.spotify.com/v1/playlists/${playlist.id}/tracks`,
+          data: {
+              position: "0",
+              uris: trackUris
+          },
+          headers: { 
+              'Content-Type': "application/json",
+              'authorization': 'Bearer ' + req.query.access_token 
+          },
+          json: true
+          }
+          for(let f = 0; f < 5; f++){
+              if(f > 0) console.log("Retry adding track. " + f)
+              try {
+                  const response = await axios(addTracksOptions.url, {
+                  method: 'POST',
+                  data: addTracksOptions.data,
+                  headers: addTracksOptions.headers,
+                  json: addTracksOptions.json
+                  }).then((res) => {
+                  if(res.status === 201 || res.status === 200) f = 5;
+                  console.log("Add track: "+res.status);
+                  })
+                  
+              } catch(error) {
+                  console.log("An exception occurred when adding a track.");
+              }
+          }
+      }
+  }
+
+  res.send("FINISHED GETTING TRACKS.")
+})
 
 module.exports = router
