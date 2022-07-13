@@ -45,6 +45,14 @@ body {
   background-color: $black;
   height: inherit;
   padding: 0;
+  margin-left: auto;
+  margin-right: auto;
+  @include layout-for(tablet) {
+    max-width: 960px;
+  }
+  @include layout-for(desktop) {
+    max-width: 1140px;
+  }
 }
 
 #content {
