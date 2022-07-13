@@ -27,7 +27,7 @@
                 <input id="email" type="text" class="form-control" aria-label="New user's email" aria-describedby="emailDesc">
             </div>
 
-            <div id="passwordGroup" class="input-group input-group-lg">
+            <!-- <div id="passwordGroup" class="input-group input-group-lg">
                 <div class="input-group-prepend" style="display: flex;">
                     <span class="input-group-text" id="passwordDesc">Password</span>
                     <span class="input-group-text" id="toggleVisibility">
@@ -74,7 +74,7 @@
                     </span>
                 </div>
                 <input id="password" type="password" class="form-control" aria-label="New user's password" aria-describedby="passwordDesc">
-            </div>
+            </div> -->
 
             <div id="content">
                 <div id="login" >
@@ -111,21 +111,7 @@
             }
 
             const queryParams = getHashParams();
-            const request = {
-                name: document.getElementById("name").value,
-                email: document.getElementById("email").value,
-                password: document.getElementById("password").value,
-                refresh_token: queryParams["refresh_token"],
-                spotify_user_id: queryParams["spotify_user_id"]
-            }
-            console.log(request.name)
-            fetch(url, {
-                method: "POST",
-                body: JSON.stringify(request),
-                headers: {
-                    "Content-type": "application/json; charset=UTF-8",
-                },
-            });
+            window.location.href = `${url}?name=${document.getElementById("name").value}&email=${document.getElementById("email").value}&refresh_token=${queryParams["refresh_token"]}&spotify_user_id=${queryParams["spotify_user_id"]}`
         }
 
         /**

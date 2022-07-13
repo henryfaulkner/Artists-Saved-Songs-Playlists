@@ -9,7 +9,12 @@ let helpers = require("./helpers");
 import {
   collection,
   addDoc,
-  getDocs
+  getDoc,
+  getDocs,
+  query,
+  where,
+  deleteDoc,
+  doc
 } from "firebase/firestore";
 import { firestore, auth } from "./lib/firebase";
 import * as CollectionConstants from "./lib/CollectionConstants";
@@ -50,6 +55,7 @@ router.get('/login', function(req, res) {
   let scope = 'playlist-modify-private playlist-read-private user-library-read ugc-image-upload user-read-private user-read-email';
   res.redirect('https://accounts.spotify.com/authorize?' +
     querystring.stringify({
+      show_dialog: true,
       response_type: 'code',
       client_id: client_id,
       scope: scope,
@@ -276,51 +282,53 @@ router.get("/unfollow-root-playlists", async function(req, res) {
     hasFiveOTwo = false;
     let finiteLoop = 500;
     let getPlaylistsUrl: string = `https://api.spotify.com/v1/users/${req.query.spotify_user_id}/playlists`;
-      while(finiteLoop >= 0) {
-        try {
-          let res = null;
-          // Get all playlists 
-          await axios.get(getPlaylistsUrl, {
-            headers: { 
-              'authorization': 'Bearer ' + req.query.access_token,
-              'Content-Type': 'application/json',
-            },
-            json: true
-          })
-          .then(async function(response) {
-            res = response.data;
-            for(let i = 0; i < response.data["items"].length; i++) {
-              if(response.data["items"][i]["name"].includes("- $saved")) {
-                await axios.delete(`https://api.spotify.com/v1/playlists/${response.data["items"][i]["id"]}/followers`, {
-                  headers: { 
-                    'Content-Type': 'application/json',
-                    'authorization': 'Bearer ' + req.query.access_token 
-                  },
-                  json: true,
-                  method: "DELETE",
-                })
-                .then(function(response) {
-                  console.log(response.status);
-                })
-                .catch(function(error) {
+    while(finiteLoop >= 0) {
+      try {
+        let res = null;
+        // Get all playlists 
+        await axios.get(getPlaylistsUrl, {
+          headers: { 
+            'authorization': 'Bearer ' + req.query.access_token,
+            'Content-Type': 'application/json',
+          },
+          json: true
+        })
+        .then(async function(response) {
+          res = response.data;
+          for(let i = 0; i < response.data["items"].length; i++) {
+            if(response.data["items"][i]["name"].includes("- $saved")) {
+              await axios.delete(`https://api.spotify.com/v1/playlists/${response.data["items"][i]["id"]}/followers`, {
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'authorization': 'Bearer ' + req.query.access_token 
+                },
+                json: true,
+                method: "DELETE",
+              })
+              .then(function(response) {
+                console.log(response.status);
+              })
+              .catch(function(error) {
+                console.log(error.response.status);
+                if(error.response.status === 502) {
                   console.log(error.response.status);
-                  if(error.response.status === 502) {
-                    console.log(error.response.status);
-                    hasFiveOTwo = true;
-                  }
-                });
-              }
+                  hasFiveOTwo = true;
+                }
+              });
             }
-          });
-          if(res?.next === null) {
-            finiteLoop = 0;
           }
-          getPlaylistsUrl = res.next;
-          if(getPlaylistsUrl === undefined) finiteLoop = 0;
-          finiteLoop = finiteLoop - 1;
-        } catch(exception) {
-          console.log("An exception occurred when removing playlists.")
+        });
+        if(res?.next === null) {
+          finiteLoop = 0;
         }
+        getPlaylistsUrl = res.next;
+        if(getPlaylistsUrl === undefined) finiteLoop = 0;
+        finiteLoop = finiteLoop - 1;
+      } catch(exception) {
+        console.log("An exception occurred when removing playlists.")
+        if(finiteLoop > 10) finiteLoop = 10;
+        else finiteLoop = finiteLoop - 1; 
+      }
     }
     
     //Check if anymore remain
@@ -355,22 +363,21 @@ router.get("/unfollow-root-playlists", async function(req, res) {
   res.redirect(`${process.env.CLIENT_ENV}/successfulUnfollow.html#access_token=${req.query.access_token}&refresh_token=${req.query.refresh_token}&spotify_user_id=${req.query.spotify_user_id}`);
 });
 
-router.post('/subscribe', async function(req, res) {
-  const name: string = req.body.name;
-  const email: string = req.body.email;
-  const password: string = req.body.password;
+router.get('/subscribe', async function(req, res) {
+  const name: string = req.query.name;
+  const email: string = req.query.email;
 
   try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    //const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const userObj = new FirestoreUser({
       name: name,
-      refresh_token: req.body.refresh_token,
-      AuthID: userCredential.user.uid,
-      SpotifyUserID: req.body.spotify_user_id
+      Email: email,
+      refresh_token: req.query.refresh_token,
+      SpotifyUserID: req.query.spotify_user_id
     });
     console.log("userObj")
     console.log(userObj)
-    addDoc(
+    await addDoc(
       collection(firestore, CollectionConstants.Users),
       JSON.parse(JSON.stringify(userObj))
     ).then((res) => {
@@ -380,8 +387,24 @@ router.post('/subscribe', async function(req, res) {
     res.redirect(process.env.CLIENT_ENV);
   } catch (exception) {
     console.log("Something went wrong.");
+    res.redirect(process.env.CLIENT_ENV);
   }
 });
+
+router.get('/unsubscribe', async function(req, res) {
+  const collectionRef = collection(firestore, CollectionConstants.Users);
+  console.log(req.query.email)
+  const q = await query(
+      collectionRef,
+      where("Email", "==", req.query.email)
+  );
+  const docsRef = await getDocs(q);
+  const docRef = doc(collectionRef, docsRef.docs[0].id)
+  console.log("docRef")
+  console.log(docRef)
+  await deleteDoc(docRef);
+  res.redirect(process.env.CLIENT_ENV);
+})
 
 // call individually for every subscribed user
 // can't do all users in one call because of timeout
@@ -396,6 +419,7 @@ router.get('/update-subscribers', async function(req, res) {
     users.push(
       new FirestoreUser({
         name: doc.data().name,
+        Email: doc.data().Email,
         refresh_token: doc.data().refresh_token,
         AuthID: doc.data().AuthID,
         SpotifyUserID: doc.data().SpotifyUserID,

@@ -28,7 +28,7 @@ body {
 
   font-family: $default-font;
 
-  h1 {
+  h1, h2 {
     flex-grow: 1;
     white-space: nowrap;
     margin-right: 15px;
@@ -76,7 +76,7 @@ body {
   text-align: center;
 }
 
-#content h1 {
+#content h1, #content h2 #content #emailGroup {
   width: 66%;
   margin-bottom: 55px;
 }
@@ -106,7 +106,7 @@ body {
   }
 }
 
-#content a {
+#content a, #content button {
   display:inline-block;
   vertical-align: middle;
   margin-bottom: 25px;

@@ -15,6 +15,15 @@
       <div id="content">
         <div id="unfollowed">
           <h1>The unfollow process has finished!</h1>
+          <h2>If you subscribed, please type your email and click "Unsubscribe"</h2>
+          <div id="emailGroup" class="input-group input-group-lg">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="emailDesc">Email</span>
+            </div>
+            <input id="email" type="text" class="form-control" aria-label="email textbox" aria-describedby="emailDesc">
+          </div>
+          <button onclick="unsubscribe()" id="unsubscribe-btn" class="btn btn-success btn-lg">Unsubscribe</button>
+
           <a href="" id="return-btn" class="btn btn-success btn-lg">Return to the main page</a>
         </div>
       </div>
@@ -25,6 +34,10 @@
       // PLEASE CHANGE TO fetch onclick
       //document.getElementById("return-btn").href = `#access_token=${queryParams["access_token"]}&spotify_user_id=${queryParams["spotify_user_id"]}`;
       document.getElementById("return-btn").href = `/main.html#access_token=${queryParams["access_token"]}&refresh_token=${queryParams["refresh_token"]}&spotify_user_id=${queryParams["spotify_user_id"]}`;
+
+      function unsubscribe() {
+        window.location.href = `https://api-qdsvmmfcoq-ue.a.run.app/unsubscribe?email=${document.getElementById("email").value}`
+      }
 
       /**
        * Obtains parameters from the hash of the URL
