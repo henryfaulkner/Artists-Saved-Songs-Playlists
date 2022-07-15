@@ -56,7 +56,11 @@ body {
 }
 
 #content {
-  height: 75%;
+  height: 55%;
+}
+
+footer {
+  height: 20%;
 }
 
 #content>#login, #content>#loggedin, #content>#signup {
@@ -76,9 +80,12 @@ body {
   text-align: center;
 }
 
-#content h1, #content h2 #content #emailGroup {
+#content h1, #content #unfollowed {
   width: 66%;
   margin-bottom: 55px;
+}
+#content #unfollowed {
+  margin-left: 18%;
 }
 
 #signup {
