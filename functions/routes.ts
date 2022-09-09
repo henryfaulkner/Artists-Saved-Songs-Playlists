@@ -447,10 +447,7 @@ router.get('/update-subscribers', async function(req, res) {
       access_token: access_token,
       spotify_user_id: users[i].SpotifyUserID
     };
-    // Wanted to be synchronous but
-    // Functions can only handle a single request at a time
-    // Multithreading may be necessary 
-    // Parallel Execution: https://www.youtube.com/watch?v=MzTS6mFDGjU&list=PLl-K7zZEsYLm9A9rcHb1IkyQUu6QwbjdM&index=3
+    
     axios(`${process.env.SERVER_ENV}/update-users-playlists?access_token=${params.access_token}&spotify_user_id=${params.spotify_user_id}`,
       {
         method: 'GET',
