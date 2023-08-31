@@ -2,7 +2,7 @@
 
 This Node.js app creates playlists which imitate Spotify's deprecated "listen to saved songs by specific artist in Your Library" functionality.
 
-# Hosted at [https://artists-saved-songs-playlists.web.app/](https://artists-saved-songs-playlists.azurewebsites.net)
+# Hosted at [https://artists-saved-songs-playlists.azurewebsites.net](https://artists-saved-songs-playlists.azurewebsites.net)
 
 ## Spotify Authorization Scopes used
 
