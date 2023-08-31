@@ -14,9 +14,10 @@ import User from "./models/User";
 import Image from "./models/Image"
 import { Router } from "express";
 
-const client_id: string = process.env.CLIENT_ID; // Your client id
-const client_secret: string = process.env.CLIENT_SECRET; // Your secret
-const redirect_uri: string = `${process.env.SERVER_ENV}/callback`; // Your redirect uri
+const client_env = 'https://artists-saved-songs-playlists.azurewebsites.net';
+const client_id = 'd2168f3d6a2a424a82fa9de1c3cfe45b';//process.env.CLIENT_ID; // Your client id
+const client_secret = '8fc4aaceb03b406fb4f724113528d8b3';//process.env.CLIENT_SECRET; // Your secret
+const redirect_uri = 'https://artists-saved-songs-playlists.azurewebsites.net/callback';//`${process.env.SERVER_ENV}/callback`; // Your redirect uri
 let stateKey: string = 'spotify_auth_state';
 let router: Router = express_routes.Router();
 let aggregatedTracksByArtistList: AggregatedTracksByArtist[] = [];
@@ -58,7 +59,7 @@ router.get('/callback', async function(req, res) {
   let storedState = req.cookies ? req.cookies[stateKey] : null;
 
   if (state === null || state !== storedState) {
-    res.redirect(process.env.CLIENT_ENV + '/#' +
+    res.redirect(client_env + '/#' +
       querystring.stringify({
         error: 'state_mismatch'
       }));
@@ -70,7 +71,7 @@ router.get('/callback', async function(req, res) {
         method: "POST",
         headers: {
           Accept: 'application/json',
-          'Authorization': 'Basic ' + (new Buffer(process.env.CLIENT_ID + ':' + process.env.CLIENT_SECRET).toString('base64')),
+          'Authorization': 'Basic ' + (new Buffer(client_id + ':' + client_secret).toString('base64')),
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         params: {
@@ -103,14 +104,14 @@ router.get('/callback', async function(req, res) {
       let user = userRes.data;
 
       // we can also pass the token to the browser to make requests from there
-      res.redirect(process.env.CLIENT_ENV + '/main.html#' +
+      res.redirect(client_env + '/main.html#' +
         querystring.stringify({
           access_token: access_token,
           refresh_token: refresh_token,
           spotify_user_id: user.id
         }));
     } else {
-      res.redirect(process.env.CLIENT_ENV + '/#' +
+      res.redirect(client_env + '/#' +
         querystring.stringify({
           error: 'invalid_token'
         }));
@@ -142,11 +143,11 @@ router.get('/refresh_token', function(req, res) {
 
 router.get('/logout', function(req, res) {
   res.clearCookie(stateKey);
-  res.redirect(process.env.CLIENT_ENV);
+  res.redirect(client_env);
 });
 
 router.get("/return-home", function(req, res) {
-  res.redirect(process.env.CLIENT_ENV);
+  res.redirect(client_env);
 });
 
 router.get("/get-liked-tracks", async function(req, res) {
@@ -257,7 +258,7 @@ router.get("/run-process", async function(req, res) {
   };
   console.log("Finished creating playlists!");
   aggregatedTracksByArtistList = [];
-  res.redirect(`${process.env.CLIENT_ENV}/successfulCreate.html#access_token=${req.query.access_token}&refresh_token=${req.query.refresh_token}&spotify_user_id=${req.query.spotify_user_id}`);
+  res.redirect(`${client_env}/successfulCreate.html#access_token=${req.query.access_token}&refresh_token=${req.query.refresh_token}&spotify_user_id=${req.query.spotify_user_id}`);
 })
 
 router.get("/unfollow-root-playlists", async function(req, res) {
@@ -345,7 +346,7 @@ router.get("/unfollow-root-playlists", async function(req, res) {
     console.log(hasFiveOTwo)
   }
   console.log("Finished deleting playlists.")
-  res.redirect(`${process.env.CLIENT_ENV}/successfulUnfollow.html#access_token=${req.query.access_token}&refresh_token=${req.query.refresh_token}&spotify_user_id=${req.query.spotify_user_id}`);
+  res.redirect(`${client_env}/successfulUnfollow.html#access_token=${req.query.access_token}&refresh_token=${req.query.refresh_token}&spotify_user_id=${req.query.spotify_user_id}`);
 });
 
 // router.get('/subscribe', async function(req, res) {
@@ -369,10 +370,10 @@ router.get("/unfollow-root-playlists", async function(req, res) {
 //       userObj.SetDocumentID = res.id;
 //     });
 //     console.log("Successfully created user");
-//     res.redirect(process.env.CLIENT_ENV);
+//     res.redirect(client_env);
 //   } catch (exception) {
 //     console.log("Something went wrong.");
-//     res.redirect(process.env.CLIENT_ENV);
+//     res.redirect(client_env);
 //   }
 // });
 
@@ -388,7 +389,7 @@ router.get("/unfollow-root-playlists", async function(req, res) {
 //   console.log("docRef")
 //   console.log(docRef)
 //   await deleteDoc(docRef);
-//   res.redirect(process.env.CLIENT_ENV);
+//   res.redirect(client_env);
 // })
 
 // call individually for every subscribed user

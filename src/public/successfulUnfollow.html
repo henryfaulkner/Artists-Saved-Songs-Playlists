@@ -35,7 +35,7 @@
           >This site uses Google Analytics (which adds cookies) to measure the number
           of unique visitors.</p
         >
-        <p>© 2022 Henry Faulkner. All rights reserved.</p>
+        <p>© <span id="current-year"></span> Henry Faulkner. All rights reserved.</p>
       </footer>
     </div>
 
@@ -46,7 +46,7 @@
       document.getElementById("return-btn").href = `/main.html#access_token=${queryParams["access_token"]}&refresh_token=${queryParams["refresh_token"]}&spotify_user_id=${queryParams["spotify_user_id"]}`;
 
       function unsubscribe() {
-        window.location.href = `https://api-qdsvmmfcoq-ue.a.run.app/unsubscribe?email=${document.getElementById("email").value}`
+        window.location.href = `https://artists-saved-songs-playlists.azurewebsites.netunsubscribe?email=${document.getElementById("email").value}`
       }
 
       /**
@@ -61,6 +61,11 @@
             hashParams[e[1]] = decodeURIComponent(e[2]);
         }
         return hashParams;
+      }
+
+      var currentYear = new Date().getFullYear();
+      function updateYear() {
+          document.getElementById("current-year").textContent = currentYear;
       }
     </script>
   </body>

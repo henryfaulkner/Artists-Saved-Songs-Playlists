@@ -6,7 +6,7 @@
     <link href="./styles/css/styles.css" rel="stylesheet" type="text/css"/>
   </head>
 
-  <body>
+  <body onload="updateYear()">
     <div class="myContainer">
       <div class="navBar">
         <h1><a href="/" class="titleLink">Artists Saved Songs Playlists</a></h1>
@@ -28,7 +28,7 @@
           >This site uses Google Analytics (which adds cookies) to measure the number
           of unique visitors.</p
         >
-        <p>© 2022 Henry Faulkner. All rights reserved.</p>
+        <p>© <span id="current-year"></span> Henry Faulkner. All rights reserved.</p>
       </footer>
     </div>
 
@@ -50,6 +50,11 @@
             hashParams[e[1]] = decodeURIComponent(e[2]);
         }
         return hashParams;
+      }
+
+      var currentYear = new Date().getFullYear();
+      function updateYear() {
+          document.getElementById("current-year").textContent = currentYear;
       }
     </script>
   </body>

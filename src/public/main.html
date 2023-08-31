@@ -1,92 +1,140 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
   <head>
     <title>Artists' Saved Songs</title>
-    <link rel="icon" href="./assets/icons/Spotify_Icon_RGB_Green.png">
-    <link href="./styles/css/styles.css" rel="stylesheet" type="text/css"/>
+    <link rel="icon" href="./assets/icons/Spotify_Icon_RGB_Green.png" />
+    <link href="./styles/css/styles.css" rel="stylesheet" type="text/css" />
   </head>
 
-  <body>
+  <body onload="updateYear()">
     <div class="myContainer">
-        <!-- Modal -->
-        <div class="modal" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header" style="justify-content: center;">
-                        <h3 class="modal-title" id="staticBackdropLabel" style="color: white;">
-                            Please wait for the process to finish.
-                        </h3>
-                    </div>
-                    <div class="modal-body">
-                        <div class="item loading-3">
-                            <div class="loading"></div>
-                        </div>
-                    </div>
-                </div>
+      <!-- Modal -->
+      <div
+        class="modal"
+        id="staticBackdrop"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false"
+        tabindex="-1"
+        aria-labelledby="staticBackdropLabel"
+        aria-hidden="true"
+      >
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header" style="justify-content: center">
+              <h3
+                class="modal-title"
+                id="staticBackdropLabel"
+                style="color: white"
+              >
+                Please wait for the process to finish.
+              </h3>
             </div>
-        </div>
-
-        <div class="navBar">
-            <h1><a href="/" class="titleLink">Artists Saved Songs Playlists</a></h1>
-            <img src="./assets/logos/Spotify_Logo_RGB_White.png" id="navBarLogo"/>
-        </div>
-        <div id="content">
-            <div id="loggedin">
-                <a href="" onclick="showModal()" id="run-process-btn" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#staticBackdrop">Create Artists' Saved Track Playlists</a>
-                <a href="" onclick="showModal()" id="unfollow-root-playlists-btn" class="btn btn-danger btn-lg" data-bs-toggle="modal" data-bs-target="#staticBackdrop">Remove Artists' Saved Track Playlists</a>
-                <a href="" id="logout-btn" class="btn btn-danger btn-lg">Logout</a>
+            <div class="modal-body">
+              <div class="item loading-3">
+                <div class="loading"></div>
+              </div>
             </div>
+          </div>
         </div>
+      </div>
 
-        <footer class="px-4 flex flex-col items-center gap-4 py-5 text-center">
-            <p
-              class="underline underline-offset-4 max-w-[50ch] mb-10"
-              title="This site uses Google Analytics (which adds cookies) to measure the number of users and the countries they are from. I don’t store any of your private identifiable information."
-              >This site uses Google Analytics (which adds cookies) to measure the number
-              of unique visitors.</p
-            >
-            <p>© 2022 Henry Faulkner. All rights reserved.</p>
-        </footer> 
+      <div class="navBar">
+        <h1><a href="/" class="titleLink">Artists Saved Songs Playlists</a></h1>
+        <img src="./assets/logos/Spotify_Logo_RGB_White.png" id="navBarLogo" />
+      </div>
+      <div id="content">
+        <div id="loggedin">
+          <a
+            href=""
+            onclick="showModal()"
+            id="run-process-btn"
+            class="btn btn-success btn-lg"
+            data-bs-toggle="modal"
+            data-bs-target="#staticBackdrop"
+            >Create Artists' Saved Track Playlists</a
+          >
+          <a
+            href=""
+            onclick="showModal()"
+            id="unfollow-root-playlists-btn"
+            class="btn btn-danger btn-lg"
+            data-bs-toggle="modal"
+            data-bs-target="#staticBackdrop"
+            >Remove Artists' Saved Track Playlists</a
+          >
+          <a href="" id="logout-btn" class="btn btn-danger btn-lg">Logout</a>
+        </div>
+      </div>
+
+      <footer class="px-4 flex flex-col items-center gap-4 py-5 text-center">
+        <p
+          class="underline underline-offset-4 max-w-[50ch] mb-10"
+          title="This site uses Google Analytics (which adds cookies) to measure the number of users and the countries they are from. I don’t store any of your private identifiable information."
+        >
+          This site uses Google Analytics (which adds cookies) to measure the
+          number of unique visitors.
+        </p>
+        <p>© <span id="current-year"></span> Henry Faulkner. All rights reserved.</p>
+      </footer>
     </div>
 
     <script>
-        const queryParams = getHashParams();
+      const queryParams = getHashParams();
 
-        // PLEASE CHANGE TO fetches onclick
-        if(window.location.href.includes("http://localhost:5000/")) {
-            serverBaseUrl = "http://localhost:5001/artists-saved-songs-playlists/us-east1/";
-            document.getElementById("run-process-btn").href = `${serverBaseUrl}run-process/?access_token=${queryParams["access_token"]}&refresh_token=${queryParams["refresh_token"]}&spotify_user_id=${queryParams["spotify_user_id"]}`;
-            document.getElementById("unfollow-root-playlists-btn").href = `${serverBaseUrl}unfollow-root-playlists/?spotify_user_id=${queryParams["spotify_user_id"]}`;
-            document.getElementById("logout-btn").href = `${serverBaseUrl}logout`;
-        } else if(window.location.href.includes("http://localhost:8888/")) {
-            serverBaseUrl = "http://localhost:8888/";
-            document.getElementById("run-process-btn").href = `${serverBaseUrl}run-process/?access_token=${queryParams["access_token"]}&refresh_token=${queryParams["refresh_token"]}&spotify_user_id=${queryParams["spotify_user_id"]}`;
-            document.getElementById("unfollow-root-playlists-btn").href = `${serverBaseUrl}unfollow-root-playlists/?spotify_user_id=${queryParams["spotify_user_id"]}`;
-            document.getElementById("logout-btn").href = `${serverBaseUrl}logout`;
-        } else {
-            serverBaseUrl = "https://api-qdsvmmfcoq-ue.a.run.app/";
-            document.getElementById("run-process-btn").href = `${serverBaseUrl}run-process/?access_token=${queryParams["access_token"]}&refresh_token=${queryParams["refresh_token"]}&spotify_user_id=${queryParams["spotify_user_id"]}`;
-            document.getElementById("unfollow-root-playlists-btn").href = `${serverBaseUrl}unfollow-root-playlists/?access_token=${queryParams["access_token"]}&refresh_token=${queryParams["refresh_token"]}&spotify_user_id=${queryParams["spotify_user_id"]}`;
-            document.getElementById("logout-btn").href = `${serverBaseUrl}logout`;
-        }
+      // PLEASE CHANGE TO fetches onclick
+      if (window.location.href.includes("http://localhost:5000/")) {
+        serverBaseUrl =
+          "http://localhost:5001/artists-saved-songs-playlists/us-east1/";
+        document.getElementById(
+          "run-process-btn"
+        ).href = `${serverBaseUrl}run-process/?access_token=${queryParams["access_token"]}&refresh_token=${queryParams["refresh_token"]}&spotify_user_id=${queryParams["spotify_user_id"]}`;
+        document.getElementById(
+          "unfollow-root-playlists-btn"
+        ).href = `${serverBaseUrl}unfollow-root-playlists/?spotify_user_id=${queryParams["spotify_user_id"]}`;
+        document.getElementById("logout-btn").href = `${serverBaseUrl}logout`;
+      } else if (window.location.href.includes("http://localhost:1377/")) {
+        serverBaseUrl = "http://localhost:1377/";
+        document.getElementById(
+          "run-process-btn"
+        ).href = `${serverBaseUrl}run-process/?access_token=${queryParams["access_token"]}&refresh_token=${queryParams["refresh_token"]}&spotify_user_id=${queryParams["spotify_user_id"]}`;
+        document.getElementById(
+          "unfollow-root-playlists-btn"
+        ).href = `${serverBaseUrl}unfollow-root-playlists/?spotify_user_id=${queryParams["spotify_user_id"]}`;
+        document.getElementById("logout-btn").href = `${serverBaseUrl}logout`;
+      } else {
+        serverBaseUrl = "https://artists-saved-songs-playlists.azurewebsites.net/";
+        document.getElementById(
+          "run-process-btn"
+        ).href = `${serverBaseUrl}run-process/?access_token=${queryParams["access_token"]}&refresh_token=${queryParams["refresh_token"]}&spotify_user_id=${queryParams["spotify_user_id"]}`;
+        document.getElementById(
+          "unfollow-root-playlists-btn"
+        ).href = `${serverBaseUrl}unfollow-root-playlists/?access_token=${queryParams["access_token"]}&refresh_token=${queryParams["refresh_token"]}&spotify_user_id=${queryParams["spotify_user_id"]}`;
+        document.getElementById("logout-btn").href = `${serverBaseUrl}logout`;
+      }
 
-        /**
-         * Obtains parameters from the hash of the URL
-         * @return Object
-         */
-        function getHashParams() {
-            var hashParams = {};
-            var e, r = /([^&;=]+)=?([^&;]*)/g,
-                q = window.location.hash.substring(1);
-            while ( e = r.exec(q)) {
-                hashParams[e[1]] = decodeURIComponent(e[2]);
-            }
-            return hashParams;
+      /**
+       * Obtains parameters from the hash of the URL
+       * @return Object
+       */
+      function getHashParams() {
+        var hashParams = {};
+        var e,
+          r = /([^&;=]+)=?([^&;]*)/g,
+          q = window.location.hash.substring(1);
+        while ((e = r.exec(q))) {
+          hashParams[e[1]] = decodeURIComponent(e[2]);
         }
+        return hashParams;
+      }
 
-        function showModal() {
-            document.getElementById("staticBackdrop").style.display = "block";
-        }
+      function showModal() {
+        document.getElementById("staticBackdrop").style.display = "block";
+      }
+
+      var currentYear = new Date().getFullYear();
+      function updateYear() {
+          document.getElementById("current-year").textContent = currentYear;
+      }
     </script>
   </body>
 </html>
