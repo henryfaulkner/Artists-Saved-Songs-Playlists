@@ -6,22 +6,18 @@
     <link href="./styles/css/styles.css" rel="stylesheet" type="text/css"/>
   </head>
 
-  <body>
+  <body onload="updateYear()">
     <div class="myContainer">
       <div class="navBar">
         <h1><a href="/" class="titleLink">Artists Saved Songs Playlists</a></h1>
         <img src="./assets/logos/Spotify_Logo_RGB_White.png" id="navBarLogo"/>
       </div>
       <div id="content">
-        <div id="login">
-          <a href="" id="login-btn" class="btn btn-success btn-lg">Log in with Spotify</a>
-          <p style="width: 55%;">
-            Hey. The Developer here. I missed the Spotify functionality where they 
-            would make a playlist in your library with all your liked songs from each 
-            Artist you have liked songs by. If you like to use this feature as well,
-            email me the email you use for Spotify @ <a style="margin: 0;" href="mailto:hfaulkner27@gmail.com">hfaulkner27@gmail.com</a>.
-            I'll get you add to our list ASAP.  
-          </p>
+        <div id="created">
+          <h1>The playlist creation process has finished! Please refer to your 
+              Spotify account to see your new playlists.</h1>
+          <a href="" id="signup-btn" class="btn btn-success btn-lg">Subscribe!</a>
+          <a href="" id="return-btn" class="btn btn-success btn-lg">Return to the main page</a>
         </div>
       </div>
 
@@ -32,23 +28,15 @@
           >This site uses Google Analytics (which adds cookies) to measure the number
           of unique visitors.</p
         >
-        <p>© 2022 Henry Faulkner. All rights reserved.</p>
+        <p>© <span id="current-year"></span> Henry Faulkner. All rights reserved.</p>
       </footer>
     </div>
+
     <script>
       const queryParams = getHashParams();
-
       // PLEASE CHANGE TO fetches onclick
-      if(window.location.href.includes("http://localhost:5000/")) {
-        serverBaseUrl = "http://localhost:5001/artists-saved-songs-playlists/us-east1/";
-        document.getElementById("login-btn").href = `${serverBaseUrl}login`;
-      } else if(window.location.href.includes("http://localhost:8888/")) {
-        serverBaseUrl = "http://localhost:8888/";
-        document.getElementById("login-btn").href = `${serverBaseUrl}login`;
-      } else {
-        serverBaseUrl = "https://api-qdsvmmfcoq-ue.a.run.app/";
-        document.getElementById("login-btn").href = `${serverBaseUrl}login`;
-      }
+      document.getElementById("signup-btn").href = `/signup.html#access_token=${queryParams["access_token"]}&refresh_token=${queryParams["refresh_token"]}&spotify_user_id=${queryParams["spotify_user_id"]}`;
+      document.getElementById("return-btn").href = `/main.html#access_token=${queryParams["access_token"]}&refresh_token=${queryParams["refresh_token"]}&spotify_user_id=${queryParams["spotify_user_id"]}`;
 
       /**
        * Obtains parameters from the hash of the URL
@@ -63,7 +51,11 @@
         }
         return hashParams;
       }
+
+      var currentYear = new Date().getFullYear();
+      function updateYear() {
+          document.getElementById("current-year").textContent = currentYear;
+      }
     </script>
   </body>
 </html>
-

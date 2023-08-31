@@ -1,0 +1,4 @@
+:export {
+  mobileBreakpoint: 600px;
+  tabletBreakpoint: 1000px;
+  desktopBreakpoint: 1280px; }

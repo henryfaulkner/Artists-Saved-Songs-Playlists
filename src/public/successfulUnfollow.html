@@ -13,10 +13,17 @@
         <img src="./assets/logos/Spotify_Logo_RGB_White.png" id="navBarLogo"/>
       </div>
       <div id="content">
-        <div id="created">
-          <h1>The playlist creation process has finished! Please refer to your 
-              Spotify account to see your new playlists.</h1>
-          <a href="" id="signup-btn" class="btn btn-success btn-lg">Subscribe!</a>
+        <div id="unfollowed">
+          <h1>The unfollow process has finished!</h1>
+          <h2>If you subscribed, please type your email and click "Unsubscribe"</h2>
+          <div id="emailGroup" class="input-group input-group-lg">
+            <div class="input-group-prepend">
+                <span class="input-group-text" id="emailDesc">Email</span>
+            </div>
+            <input id="email" type="text" class="form-control" aria-label="email textbox" aria-describedby="emailDesc">
+          </div>
+          <button onclick="unsubscribe()" id="unsubscribe-btn" class="btn btn-success btn-lg">Unsubscribe</button>
+
           <a href="" id="return-btn" class="btn btn-success btn-lg">Return to the main page</a>
         </div>
       </div>
@@ -28,15 +35,19 @@
           >This site uses Google Analytics (which adds cookies) to measure the number
           of unique visitors.</p
         >
-        <p>© 2022 Henry Faulkner. All rights reserved.</p>
+        <p>© <span id="current-year"></span> Henry Faulkner. All rights reserved.</p>
       </footer>
     </div>
 
     <script>
       const queryParams = getHashParams();
-      // PLEASE CHANGE TO fetches onclick
-      document.getElementById("signup-btn").href = `/signup.html#access_token=${queryParams["access_token"]}&refresh_token=${queryParams["refresh_token"]}&spotify_user_id=${queryParams["spotify_user_id"]}`;
+      // PLEASE CHANGE TO fetch onclick
+      //document.getElementById("return-btn").href = `#access_token=${queryParams["access_token"]}&spotify_user_id=${queryParams["spotify_user_id"]}`;
       document.getElementById("return-btn").href = `/main.html#access_token=${queryParams["access_token"]}&refresh_token=${queryParams["refresh_token"]}&spotify_user_id=${queryParams["spotify_user_id"]}`;
+
+      function unsubscribe() {
+        window.location.href = `https://artists-saved-songs-playlists.azurewebsites.netunsubscribe?email=${document.getElementById("email").value}`
+      }
 
       /**
        * Obtains parameters from the hash of the URL
@@ -50,6 +61,11 @@
             hashParams[e[1]] = decodeURIComponent(e[2]);
         }
         return hashParams;
+      }
+
+      var currentYear = new Date().getFullYear();
+      function updateYear() {
+          document.getElementById("current-year").textContent = currentYear;
       }
     </script>
   </body>
