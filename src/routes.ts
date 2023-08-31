@@ -14,10 +14,10 @@ import User from "./models/User";
 import Image from "./models/Image"
 import { Router } from "express";
 
-const client_env = 'https://artists-saved-songs-playlists.azurewebsites.net';
-const client_id = 'd2168f3d6a2a424a82fa9de1c3cfe45b';//process.env.CLIENT_ID; // Your client id
-const client_secret = '8fc4aaceb03b406fb4f724113528d8b3';//process.env.CLIENT_SECRET; // Your secret
-const redirect_uri = 'https://artists-saved-songs-playlists.azurewebsites.net/callback';//`${process.env.SERVER_ENV}/callback`; // Your redirect uri
+const client_env = process.env.CLIENT_ENV; // Your client-side url
+const client_id = process.env.CLIENT_ID; // Your client id
+const client_secret = process.env.CLIENT_SECRET; // Your secret
+const redirect_uri = `${process.env.SERVER_ENV}/callback`; // Your redirect uri
 let stateKey: string = 'spotify_auth_state';
 let router: Router = express_routes.Router();
 let aggregatedTracksByArtistList: AggregatedTracksByArtist[] = [];
