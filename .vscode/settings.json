@@ -2,5 +2,7 @@
     "appService.zipIgnorePattern": [
         "node_modules{,/**}",
         ".vscode{,/**}"
-    ]
+    ],
+    "appService.defaultWebAppToDeploy": "/subscriptions/67597d0e-9c8f-4078-a17a-0621b06b50a6/resourceGroups/ASSP/providers/Microsoft.Web/sites/Artists-Saved-Songs-Playlists-V1",
+    "appService.deploySubpath": "."
 }

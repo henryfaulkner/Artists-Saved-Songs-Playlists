@@ -192,6 +192,7 @@ router.get("/run-process", async function(req, res) {
     }
   } catch(exception) {
     console.log("An exception occurred when getting liked tracks.");
+    console.log("exception trace: ", exception.message);
   }
   console.log("FINISHED GETTING TRACKS.")
   aggregatedTracksByArtistList = helpers.RemoveDuplicateTrackLists(aggregatedTracksByArtistList);
@@ -222,8 +223,9 @@ router.get("/run-process", async function(req, res) {
           playlist = new Playlist(res.data ?? {});
           console.log("Add playlist: " + res.status);
         });  
-      } catch(error) {
-        console.log("An exception occurred when creating a playlist.")
+      } catch(exception) {
+        console.log("An exception occurred when creating a playlist.");
+        console.log("exception trace: ", exception.message);
       };
     }
 
@@ -251,8 +253,9 @@ router.get("/run-process", async function(req, res) {
           if(res.status === 201 || res.status === 200) f = 5;
           console.log("Add track: "+res.status);
         })
-      } catch(error) {
+      } catch(exception) {
         console.log("An exception occurred when adding a track.");
+        console.log("exception trace: ", exception.message);
       }
     }
   };
@@ -476,6 +479,7 @@ router.get("/update-users-playlists", async (req, res) => {
       aggregatedTracksByArtistList = aggregatedTracksByArtistList.concat(helpers.GetAggregatedTracksByArtist(trackArr));
   } catch(exception) {
       console.log("An exception occurred when getting liked tracks.");
+      console.log("exception trace: ", exception.message);
   }
   console.log("FINISHED GETTING TRACKS.")
   aggregatedTracksByArtistList = helpers.RemoveDuplicateTrackLists(aggregatedTracksByArtistList);
@@ -507,6 +511,7 @@ router.get("/update-users-playlists", async (req, res) => {
       }
   } catch(exception) {
     console.log("An exception occurred when getting liked tracks.");
+    console.log("exception trace: ", exception.message);
   }
   // Keep only playlists I made
   playlistArr = playlistArr.filter(playlist => playlist.name.includes("- $saved"));
@@ -572,8 +577,9 @@ router.get("/update-users-playlists", async (req, res) => {
                     console.log("Add track: "+res.status);
                   })
                   
-              } catch(error) {
+              } catch(exception) {
                   console.log("An exception occurred when adding a track.");
+                  console.log("exception trace: ", exception.message);
               }
           }
         }
@@ -603,8 +609,9 @@ router.get("/update-users-playlists", async (req, res) => {
                       console.log("Add playlist: " + res.status);
                   });  
                   
-              } catch(error) {
-                  console.log("An exception occurred when creating a playlist.")
+              } catch(exception) {
+                  console.log("An exception occurred when creating a playlist.");
+                  console.log("exception trace: ", exception.message);
               };
           }
 
@@ -639,8 +646,9 @@ router.get("/update-users-playlists", async (req, res) => {
                   console.log("Add track: "+res.status);
                   })
                   
-              } catch(error) {
+              } catch(exception) {
                   console.log("An exception occurred when adding a track.");
+                  console.log("exception trace: ", exception.message);
               }
           }
       }
